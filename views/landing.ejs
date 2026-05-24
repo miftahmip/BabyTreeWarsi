@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= pageTitle %></title>
+  <link href="/output.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-deep:   #1a4731;
+      --green-mid:    #2d6a4f;
+      --green-bright: #40916c;
+      --green-light:  #74c69d;
+      --green-pale:   #d8f3dc;
+      --brown-mid:    #7d5a3c;
+      --brown-light:  #c9a87c;
+      --cream:        #fdf8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--green-deep); }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(253,248,240,0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(116,198,157,.2);
+      padding: 0 48px;
+      height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .navbar-brand {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .navbar-brand img { height: 40px; width: auto; object-fit: contain; }
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--green-deep);
+    }
+    .navbar-sub {
+      font-size: .68rem; font-weight: 300;
+      color: var(--brown-mid); letter-spacing: .3px;
+      margin-top: 1px;
+    }
+    .navbar-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-outline {
+      padding: 8px 20px; border-radius: 10px;
+      border: 1.5px solid rgba(116,198,157,.5);
+      background: transparent;
+      color: var(--green-deep);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .875rem; font-weight: 500;
+      cursor: pointer; text-decoration: none;
+      transition: all .18s;
+    }
+    .btn-outline:hover { background: rgba(216,243,220,.4); border-color: var(--green-bright); }
+    .btn-solid {
+      padding: 8px 20px; border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .875rem; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      box-shadow: 0 4px 14px rgba(45,106,79,.3);
+      transition: all .18s;
+    }
+    .btn-solid:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(45,106,79,.42); }
+    .btn-brown {
+      padding: 8px 20px; border-radius: 10px;
+      border: 1.5px solid rgba(201,168,124,.6);
+      background: rgba(201,168,124,.12);
+      color: var(--brown-mid);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .875rem; font-weight: 500;
+      cursor: pointer; text-decoration: none;
+      transition: all .18s;
+    }
+    .btn-brown:hover { background: rgba(201,168,124,.25); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 72vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 90px 48px 70px;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background-image: url('/images/hero-bg.png');
+      background-size: cover; background-position: center;
+      z-index: 0;
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(10,40,22,.52) 0%,
+        rgba(10,40,22,.62) 60%,
+        rgba(10,40,22,.72) 100%
+      );
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      max-width: 680px;
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 20px;
+      background: rgba(116,198,157,.22);
+      border: 1px solid rgba(116,198,157,.4);
+      font-size: .72rem; font-weight: 600; letter-spacing: .7px;
+      color: #74c69d; text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.2rem; font-weight: 700;
+      line-height: 1.12; letter-spacing: -.3px;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+    .hero-desc {
+      font-size: 1rem; font-weight: 300;
+      color: rgba(255,255,255,.82); line-height: 1.78;
+      margin-bottom: 36px;
+    }
+    .hero-cta { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .btn-hero {
+      padding: 13px 30px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--green-light), var(--green-mid));
+      color: #fff; font-family: 'DM Sans', sans-serif;
+      font-size: .95rem; font-weight: 600; cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 6px 22px rgba(45,106,79,.45);
+      transition: transform .18s, box-shadow .18s;
+    }
+    .btn-hero:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(45,106,79,.55); }
+    .btn-hero-outline {
+      padding: 12px 28px; border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,.5);
+      background: rgba(255,255,255,.1);
+      backdrop-filter: blur(6px);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem; font-weight: 500; cursor: pointer;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 7px;
+      transition: all .18s;
+    }
+    .btn-hero-outline:hover { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.75); }
+
+    /* ── STAT STRIP ── */
+    .stat-strip {
+      background: #fff;
+      border-bottom: 1px solid rgba(116,198,157,.15);
+      padding: 40px 48px;
+      display: flex; justify-content: center; gap: 0;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 0 56px;
+      border-right: 1px solid rgba(116,198,157,.2);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem; font-weight: 700;
+      color: var(--green-bright); line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      font-size: .8rem; font-weight: 400;
+      color: var(--brown-mid); letter-spacing: .2px;
+    }
+
+    /* ── SECTION ── */
+    .section { padding: 72px 48px; }
+    .section-header { text-align: center; margin-bottom: 44px; }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 700;
+      color: var(--green-deep); margin-bottom: 8px;
+    }
+    .section-sub {
+      font-size: .9rem; color: var(--brown-mid); font-weight: 300;
+    }
+
+    /* ── PROGRAM CARDS ── */
+    .program-grid {
+      display: flex;
+      gap: 24px;
+      transition: transform .4s cubic-bezier(.4,0,.2,1);
+      will-change: transform;
+    }
+    .program-card {
+      flex: 0 0 calc((100% - 24px * 3) / 4);
+      min-width: 0;
+      background: #fff;
+      border: 1px solid rgba(116,198,157,.2);
+      border-radius: 20px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: transform .22s, box-shadow .22s;
+      display: flex; flex-direction: column;
+    }
+    .program-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(26,71,49,.13);
+    }
+    .program-card-img {
+      width: 100%; height: 190px; object-fit: cover;
+      background: var(--green-pale);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .program-card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .program-card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .program-card-tipe {
+      display: inline-block; padding: 3px 10px; border-radius: 14px;
+      font-size: .68rem; font-weight: 600; letter-spacing: .4px;
+      margin-bottom: 10px;
+    }
+
+    .program-card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem; font-weight: 600;
+      color: var(--green-deep); margin-bottom: 8px; line-height: 1.3;
+    }
+    .program-card-loc {
+      font-size: .78rem; color: #999; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    /* Pohon terkumpul badge */
+    .pohon-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--green-pale);
+      border-radius: 10px;
+      padding: 8px 14px;
+      margin-bottom: 16px;
+    }
+    .pohon-badge-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--green-bright); line-height: 1;
+    }
+    .pohon-badge-label {
+      font-size: .75rem; font-weight: 400;
+      color: var(--green-mid); line-height: 1.3;
+    }
+
+    .program-card-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid rgba(116,198,157,.12);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .program-card-harga {
+      font-size: .82rem; font-weight: 600; color: var(--green-bright);
+    }
+    .program-card-date {
+      font-size: .7rem; color: #999; margin-top: 2px;
+    }
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 64px 0; color: #aac8b4;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--green-deep);
+      color: rgba(255,255,255,.7);
+      padding: 48px;
+      text-align: center;
+    }
+    footer .footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; font-weight: 700;
+      color: #fff; margin-bottom: 8px;
+    }
+    footer p { font-size: .85rem; font-weight: 300; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .navbar { padding: 0 20px; }
+      .hero { padding: 64px 20px 56px; min-height: 60vh; }
+      .hero-title { font-size: 2.1rem; }
+      .stat-strip { padding: 32px 20px; flex-wrap: wrap; gap: 24px; }
+      .stat-item { border-right: none; padding: 0 24px; }
+      .section { padding: 48px 20px; }
+      footer { padding: 32px 20px; }
+    }
+
+    /* ── CAROUSEL ── */
+    .carousel-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .carousel-track-outer {
+      overflow: hidden;
+      width: 100%;
+    }
+    .carousel-btn {
+      flex-shrink: 0;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(116,198,157,.4);
+      background: #fff;
+      color: var(--green-deep);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(26,71,49,.1);
+      transition: all .18s;
+      z-index: 2;
+    }
+    .carousel-btn:hover {
+      background: var(--green-pale);
+      border-color: var(--green-bright);
+      transform: scale(1.08);
+    }
+    .carousel-btn:disabled {
+      opacity: .35;
+      cursor: default;
+      transform: none;
+    }
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 28px;
+    }
+    .carousel-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green-pale);
+      border: 1.5px solid var(--green-light);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .carousel-dot.active {
+      background: var(--green-bright);
+      border-color: var(--green-bright);
+      transform: scale(1.25);
+    }
+
+    @media (max-width: 1100px) {
+      .program-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 900px) {
+      .program-grid { grid-template-columns: 1fr; }
+      .carousel-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <img src="/images/warsi.png" alt="Baby Tree" onerror="this.style.display='none'" />
+      <div>
+        <div class="brand-name">Baby Tree</div>
+        <div class="navbar-sub">Donasi &amp; Monitoring Bibit Pohon</div>
+      </div>
+    </a>
+    <div class="navbar-actions">
+      <a href="/login" class="btn-outline">Login</a>
+      <a href="/register" class="btn-solid">Daftar</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Bersama Menanam,<br/>Bersama Menjaga
+      </h1>
+      <p class="hero-desc">
+        Bergabunglah dalam gerakan penghijauan Indonesia.
+        Donasi Anda akan ditanam menjadi pohon nyata yang dapat Anda pantau pertumbuhannya.
+      </p>
+      <div class="hero-cta">
+        <a href="#program" class="btn-hero">Mulai Berdonasi</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAT STRIP -->
+  <div class="stat-strip">
+    <div class="stat-item">
+      <div class="stat-num"><%= typeof totalPohon !== 'undefined' ? totalPohon.toLocaleString('id-ID') : '—' %></div>
+      <div class="stat-label">Pohon Tertanam</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num"><%= typeof totalPenerima !== 'undefined' ? totalPenerima.toLocaleString('id-ID') : '—' %></div>
+      <div class="stat-label">Penerima Manfaat</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num"><%= typeof totalWilayah !== 'undefined' ? totalWilayah : '—' %></div>
+      <div class="stat-label">Wilayah Penanaman</div>
+    </div>
+  </div>
+
+  <!-- PROGRAM SECTION -->
+  <section class="section" id="program">
+    <div class="section-header">
+      <div class="section-title">Pilih program yang ingin Anda dukung</div>
+      <p class="section-sub">Setiap donasi Anda menjadi pohon nyata yang terus tumbuh</p>
+    </div>
+
+    <% if (programs.length === 0) { %>
+    <div class="empty-state">
+      <p style="font-size:.95rem">Belum ada program donasi aktif saat ini</p>
+    </div>
+    <% } else { %>
+
+    <div class="carousel-wrapper">
+    <% if (programs.length > 3) { %>
+    <button class="carousel-btn carousel-btn-left" id="btnPrev" aria-label="Sebelumnya">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <% } %>
+
+    <div class="carousel-track-outer">
+      <div class="program-grid" id="carouselTrack">
+        <% programs.forEach(item => {
+          const fmtRp  = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
+          const fmtTgl = (tgl) => tgl ? new Date(tgl).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : '-';
+          const lokasi = [item.nama_kelurahan, item.nama_kecamatan, item.nama_kota, item.nama_provinsi]
+            .filter(Boolean).join(', ') || 'Indonesia';
+        %>
+        <a href="/program/<%= item.id_program %>" class="program-card">
+          <div class="program-card-img">
+            <% if (item.flyer_program) { %>
+            <img src="/uploads/program/<%= item.flyer_program %>" alt="<%= item.judul_program %>"
+                 onerror="this.parentElement.innerHTML='<svg width=40 height=40 fill=none viewBox=\'0 0 24 24\' stroke=\'#aac8b4\' stroke-width=1.5><rect x=3 y=3 width=18 height=18 rx=3/><circle cx=8.5 cy=8.5 r=1.5/><path d=\'M21 15l-5-5L5 21\'/></svg>'" />
+            <% } %>
+          </div>
+
+          <div class="program-card-body">
+            <div class="program-card-title"><%= item.judul_program %></div>
+            <div class="program-card-loc">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   style="flex-shrink:0; align-self:flex-start; margin-top:2px;">
+                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <%= lokasi %>
+            </div>
+            <div class="pohon-badge">
+              <div>
+                <div class="pohon-badge-num"><%= (item.pohon_terkumpul || 0).toLocaleString('id-ID') %></div>
+                <div class="pohon-badge-label">pohon terkumpul</div>
+              </div>
+            </div>
+            <div class="program-card-footer">
+              <div>
+                <div class="program-card-harga"><%= fmtRp(item.harga_pohon) %>/pohon</div>
+              </div>
+            </div>
+          </div>
+        </a>
+        <% }) %>
+      </div>
+    </div>
+
+    <% if (programs.length > 3) { %>
+    <button class="carousel-btn carousel-btn-right" id="btnNext" aria-label="Berikutnya">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <% } %>
+  </div>
+
+  <% if (programs.length > 3) { %>
+  <div class="carousel-dots" id="carouselDots"></div>
+  <% } %>
+
+  <% } %>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">Baby Tree</div>
+    <p>Donasi &amp; Monitoring Bibit Pohon · Bersama menjaga bumi untuk generasi mendatang</p>
+    <div style="margin-top:20px; font-size:.78rem; color:rgba(255,255,255,.4)">
+      © <%= new Date().getFullYear() %> Baby Tree. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', function(e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  (function () {
+    const track    = document.getElementById('carouselTrack');
+    const btnPrev  = document.getElementById('btnPrev');
+    const btnNext  = document.getElementById('btnNext');
+    const dotsWrap = document.getElementById('carouselDots');
+
+    if (!track || !btnPrev || !btnNext) return;
+
+    const cards     = track.querySelectorAll('.program-card');
+    const total     = cards.length;
+    const perPage   = 4;
+    const pageCount = Math.ceil(total / perPage);
+    let   current   = 0;
+
+    const dots = [];
+    for (let i = 0; i < pageCount; i++) {
+      const d = document.createElement('button');
+      d.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      d.setAttribute('aria-label', 'Halaman ' + (i + 1));
+      d.addEventListener('click', () => goTo(i));
+      dotsWrap.appendChild(d);
+      dots.push(d);
+    }
+
+    function getPerPage() {
+      if (window.innerWidth <= 900)  return 1;
+      if (window.innerWidth <= 1100) return 2;
+      return 4;
+    }
+
+    function goTo(page) {
+      current = page;
+
+      const outer  = track.parentElement;
+      const outerW = outer.offsetWidth;
+      const gapPx  = 24;
+      const cardW  = (outerW - gapPx * (perPage - 1)) / perPage;
+      const slideW = cardW * perPage + gapPx * perPage;
+      track.style.transform = `translateX(-${current * slideW}px)`;
+
+      dots.forEach((d, i) => d.classList.toggle('active', i === current));
+      btnPrev.disabled = current === 0;
+      btnNext.disabled = current === pageCount - 1;
+    }
+
+    btnPrev.addEventListener('click', () => { if (current > 0) goTo(current - 1); });
+    btnNext.addEventListener('click', () => { if (current < pageCount - 1) goTo(current + 1); });
+
+    goTo(0);
+    window.addEventListener('resize', () => {
+      const newPageCount = Math.ceil(total / getPerPage());
+      if (current >= newPageCount) current = newPageCount - 1;
+      goTo(current);
+    });
+  })();
+</script>
+</body>
+</html>

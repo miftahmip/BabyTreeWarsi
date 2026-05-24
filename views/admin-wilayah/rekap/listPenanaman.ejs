@@ -1,0 +1,163 @@
+<%# views/admin/rekap/listPenanaman.ejs %>
+<% layout('layouts/admin-wilayah') %>
+
+<style>
+  :root {
+    --green-deep   : #1a4731;
+    --green-bright : #40916c;
+    --green-light  : #d8f3dc;
+    --brown-mid    : #7c6d5e;
+    --surface      : #ffffff;
+    --border       : rgba(116,198,157,.18);
+    --text-muted   : #7c9585;
+  }
+
+  .rp-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .82rem; color: var(--text-muted);
+    text-decoration: none; margin-bottom: 14px; transition: color .18s;
+  }
+  .rp-back:hover { color: var(--green-deep); }
+
+  .rp-header { margin-bottom: 24px; }
+
+  .rp-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; font-weight: 700;
+    color: var(--green-deep); margin: 0 0 4px;
+  }
+
+  .rp-subtitle { font-size: .84rem; color: var(--text-muted); margin: 0; }
+
+  /* Card tabel */
+  .rp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+
+  .rp-table {
+    width: 100%; border-collapse: collapse;
+    font-size: .875rem; min-width: 500px;
+  }
+
+  .rp-table thead tr {
+    background: rgba(216,243,220,.25);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rp-table th {
+    padding: 12px 16px; text-align: left;
+    font-size: .67rem; font-weight: 600;
+    letter-spacing: .9px; text-transform: uppercase;
+    color: var(--brown-mid); white-space: nowrap;
+  }
+
+  .rp-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid rgba(116,198,157,.07);
+    vertical-align: middle;
+  }
+
+  .rp-table tbody tr:last-child td { border-bottom: none; }
+  .rp-table tbody tr:hover td { background: rgba(240,250,244,.5); }
+
+  .rp-id {
+    font-size: .75rem; color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+  }
+
+  .rp-nama { font-weight: 600; color: var(--green-deep); font-size: .86rem; }
+
+  .rp-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 14px; border-radius: 8px;
+    background: rgba(216,243,220,.5); color: var(--green-deep);
+    border: 1px solid rgba(116,198,157,.3);
+    font-size: .78rem; font-weight: 600;
+    text-decoration: none; transition: background .15s, transform .15s;
+  }
+  .rp-btn:hover { background: rgba(116,198,157,.28); transform: translateY(-1px); }
+
+  .rp-empty {
+    padding: 52px 20px; text-align: center; color: #aac8b4;
+    font-size: .88rem;
+  }
+</style>
+
+
+<a href="/admin-wilayah/rekap-pembayaran" class="rp-back">
+  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  Kembali ke Daftar Program
+</a>
+
+<div class="rp-header">
+  <h1 class="rp-title">Pilih Penanaman</h1>
+  <p class="rp-subtitle">
+    <%= penanaman[0]?.program?.judul_program || 'Program' %>
+  </p>
+</div>
+
+<div class="rp-card">
+  <div style="overflow-x:auto">
+    <table class="rp-table">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Tanggal Penanaman</th>
+          <th>Lokasi / Wilayah</th>
+          <th style="text-align:center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (penanaman.length === 0) { %>
+          <tr><td colspan="4" class="rp-empty">Belum ada data penanaman</td></tr>
+        <% } %>
+        <% penanaman.forEach((item, i) => { %>
+          <tr>
+            <td style="color:#aac8b4; font-size:.8rem"><%= i+1 %></td>
+
+            <td>
+              <div style="font-size:.84rem; color:#555">
+                <%= item.tanggal_mulai
+                  ? new Date(item.tanggal_mulai).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})
+                  : '—' %>
+                <span style="color:var(--text-muted); font-weight:400"> s/d </span>
+                <%= item.tanggal_selesai
+                  ? new Date(item.tanggal_selesai).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})
+                  : '—' %>
+              </div>
+            </td>
+
+            <td>
+              <% const w = item.program; %>
+              <% if (w && (w.nama_kelurahan || w.nama_kecamatan || w.nama_kota)) { %>
+                <div style="font-size:.84rem; color:#555">
+                  <%= [w.nama_kelurahan, w.nama_kecamatan].filter(Boolean).join(', ') %>
+                </div>
+                <div style="font-size:.75rem; color:var(--text-muted); margin-top:2px">
+                  <%= w.nama_kota || '' %>
+                </div>
+              <% } else { %>
+                <span style="color:#aac8b4; font-size:.84rem">—</span>
+              <% } %>
+            </td>
+
+            <td style="text-align:center">
+              <a href="/admin-wilayah/rekap-pembayaran/penanaman/<%= item.id_penanaman %>"
+                 class="rp-btn">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Lihat Rekap
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>

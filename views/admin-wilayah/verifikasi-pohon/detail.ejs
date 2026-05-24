@@ -1,0 +1,1368 @@
+<% layout('layouts/admin-wilayah') %>
+
+<style>
+
+  :root {
+    --green-deep   : #1a4731;
+    --green-bright : #40916c;
+    --green-light  : #d8f3dc;
+    --brown-mid    : #7c6d5e;
+    --surface      : #ffffff;
+    --border       : rgba(116,198,157,.18);
+    --text-muted   : #7c9585;
+    --red-soft     : #fee2e2;
+    --red-deep     : #991b1b;
+    --red-mid      : #dc2626;
+  }
+
+  /* ── Header ── */
+  .dv-header { margin-bottom: 24px; }
+
+  .dv-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .82rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color .18s;
+  }
+  .dv-back:hover { color: var(--green-deep); }
+
+  .dv-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--green-deep);
+    margin: 0 0 4px;
+  }
+
+  .dv-subtitle {
+    font-size: .84rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* ── Tab nav ── */
+  .dv-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .dv-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .dv-tab:hover {
+    border-color: var(--green-bright);
+    color: var(--green-deep);
+    background: rgba(216,243,220,.2);
+  }
+  .dv-tab.active {
+    background: var(--green-bright);
+    border-color: var(--green-bright);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(64,145,108,.28);
+  }
+
+  .dv-tab-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    font-size: .65rem;
+    font-weight: 700;
+    background: rgba(255,255,255,.25);
+  }
+  .dv-tab:not(.active) .dv-tab-num {
+    background: rgba(116,198,157,.18);
+    color: var(--green-deep);
+  }
+
+  /* ── Tab panels ── */
+  .dv-panel { display: none; }
+  .dv-panel.active { display: block; }
+
+  /* ── Card ── */
+  .dv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  /* ── Card top bar ── */
+  .dv-card-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dv-card-bar-title {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--green-deep);
+    letter-spacing: .3px;
+  }
+
+  /* check-all label */
+  .dv-checkall-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .78rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* ── Table ── */
+  .dv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .875rem;
+    min-width: 700px;
+  }
+
+  .dv-table thead tr {
+    background: rgba(216,243,220,.25);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dv-table th {
+    padding: 11px 14px;
+    text-align: left;
+    font-size: .67rem;
+    font-weight: 600;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: var(--brown-mid);
+    white-space: nowrap;
+  }
+
+  .dv-table th.center,
+  .dv-table td.center { text-align: center; }
+
+  .dv-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(116,198,157,.07);
+    vertical-align: middle;
+  }
+
+  .dv-table tbody tr:last-child td { border-bottom: none; }
+  .dv-table tbody tr:hover td { background: rgba(240,250,244,.5); }
+
+  /* Custom checkbox */
+  .dv-cb {
+    width: 16px; height: 16px;
+    accent-color: var(--green-bright);
+    cursor: pointer;
+  }
+
+  /* ID pohon */
+  .dv-id {
+    font-size: .8rem;
+    color: var(--green-deep);
+  }
+
+  /* Nama pohon */
+  .dv-nama {
+    font-weight: 600;
+    color: var(--green-deep);
+    font-size: .86rem;
+  }
+
+  .dv-latin {
+    font-size: .72rem;
+    color: #aac8b4;
+    font-style: italic;
+  }
+
+  /* Koordinat */
+  .dv-coord {
+    font-size: .84rem;
+    color: #555;
+  }
+
+  /* Foto links */
+  .dv-foto-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dv-foto-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .75rem;
+    color: var(--green-bright);
+    text-decoration: none;
+    transition: color .15s;
+    white-space: nowrap;
+  }
+  .dv-foto-link:hover {
+    color: var(--green-deep);
+    text-decoration: underline;
+  }
+
+  /* Badge status */
+  .dv-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 600;
+  }
+
+  .dv-badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dv-badge-menunggu  { background: #fff8e1; color: #a05c00; }
+  .dv-badge-menunggu  .dv-badge-dot { background: #f59e0b; }
+  .dv-badge-disetujui { background: #e8f5e9; color: #2d6a4f; }
+  .dv-badge-disetujui .dv-badge-dot { background: #40916c; }
+  .dv-badge-revisi    { background: var(--red-soft); color: var(--red-deep); }
+  .dv-badge-revisi    .dv-badge-dot { background: var(--red-mid); }
+
+  /* ── Action bar ── */
+  .dv-action-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: rgba(216,243,220,.25);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    animation: dvFadeIn .2s ease;
+  }
+  .dv-action-bar.visible { display: flex; }
+
+  @keyframes dvFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .dv-action-bar-info {
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  /* ── Pagination ── */
+  .dv-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dv-pg-info {
+    font-size: .75rem;
+    color: var(--brown-mid);
+  }
+
+  .dv-pg-btns {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .dv-pg-btn {
+    min-width: 30px; height: 30px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--green-deep);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .78rem; font-weight: 500;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 6px;
+    transition: all .15s;
+  }
+  .dv-pg-btn:hover:not(:disabled) {
+    background: rgba(216,243,220,.5);
+    border-color: var(--green-bright);
+  }
+  .dv-pg-btn.active {
+    background: var(--green-bright);
+    border-color: var(--green-bright);
+    color: #fff; font-weight: 600;
+  }
+  .dv-pg-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* ── Buttons ── */
+  .dv-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .dv-btn:hover { transform: translateY(-1px); }
+
+  .dv-btn-approve {
+    background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(45,106,79,.28);
+  }
+  .dv-btn-approve:hover { box-shadow: 0 7px 20px rgba(45,106,79,.38); }
+
+  .dv-btn-revisi {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(185,28,28,.22);
+  }
+  .dv-btn-revisi:hover { box-shadow: 0 7px 20px rgba(185,28,28,.32); }
+
+  .dv-btn-cancel {
+    background: rgba(216,243,220,.4);
+    color: var(--green-deep);
+    border: 1.5px solid var(--border);
+  }
+
+  .dv-btn-save {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(185,28,28,.2);
+  }
+
+  /* ── Modal ── */
+  .dv-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .dv-modal-overlay.open { display: flex; }
+
+  .dv-modal-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 20px 60px rgba(26,71,49,.18);
+    animation: dvRise .3s cubic-bezier(.22,1,.36,1);
+  }
+
+  @keyframes dvRise {
+    from { opacity:0; transform:translateY(14px) scale(.97) }
+    to   { opacity:1; transform:translateY(0)    scale(1)   }
+  }
+
+  .dv-modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--green-deep);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dv-modal-close {
+    background: none; border: none;
+    cursor: pointer; color: #aaa;
+    font-size: 1.1rem; line-height: 1;
+    transition: color .15s;
+  }
+  .dv-modal-close:hover { color: var(--green-deep); }
+
+  .dv-modal-label {
+    display: block;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    color: var(--green-deep);
+    margin-bottom: 8px;
+  }
+
+  .dv-modal-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(116,198,157,.42);
+    background: rgba(216,243,220,.12);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    color: var(--green-deep);
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .dv-modal-textarea:focus {
+    border-color: var(--green-bright);
+    box-shadow: 0 0 0 3px rgba(64,145,108,.1);
+  }
+
+  .dv-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  /* ── Catatan revisi inline ── */
+  .dv-catatan-revisi {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 4px;
+    padding: 6px 10px;
+    background: var(--red-soft);
+    border-left: 3px solid var(--red-mid);
+    border-radius: 6px;
+    font-size: .73rem;
+    color: var(--red-deep);
+    line-height: 1.45;
+    max-width: 240px;
+    word-break: break-word;
+  }
+  .dv-catatan-revisi svg { flex-shrink: 0; margin-top: 1px; }
+
+</style>
+
+
+<!-- ══════════════════════════
+     HEADER
+══════════════════════════ -->
+<div class="dv-header">
+
+  <a href="/admin-wilayah/verifikasi-pohon" class="dv-back">
+    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Kembali ke Daftar Penanaman
+  </a>
+
+  <h1 class="dv-title">Detail Verifikasi Pohon</h1>
+  <p class="dv-subtitle"><%= penanaman.program?.judul_program %></p>
+
+</div>
+
+
+<!-- ══════════════════════════
+     TAB NAVIGATION
+══════════════════════════ -->
+<div class="dv-tabs">
+
+  <button class="dv-tab active" onclick="switchTab('penanaman', this)">
+    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M12 22V12" stroke-linecap="round"/>
+      <path d="M12 12C12 12 8 9 8 5C8 2.5 10 1 12 1C14 1 16 2.5 16 5C16 9 12 12 12 12Z"/>
+    </svg>
+    Penanaman
+    <span class="dv-tab-num"><%= data.length %></span>
+  </button>
+
+  <button class="dv-tab" onclick="switchTab('monitoring1', this)">
+    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Monitoring 1
+    <span class="dv-tab-num"><%= monitoring1.length %></span>
+  </button>
+
+  <button class="dv-tab" onclick="switchTab('monitoring2', this)">
+    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Monitoring 2
+    <span class="dv-tab-num"><%= monitoring2.length %></span>
+  </button>
+
+  <button class="dv-tab" onclick="switchTab('monitoring3', this)">
+    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Monitoring 3
+    <span class="dv-tab-num"><%= monitoring3.length %></span>
+  </button>
+
+</div>
+
+
+<!-- ══════════════════════════
+     PANEL: PENANAMAN
+══════════════════════════ -->
+<div id="panel-penanaman" class="dv-panel active">
+
+  <form action="/admin-wilayah/verifikasi-pohon/approve" method="POST" id="formVerifikasi">
+    <input type="hidden" name="id_penanaman" value="<%= penanaman.id_penanaman %>">
+
+    <!-- Action bar -->
+    <div class="dv-action-bar" id="actionBar">
+      <button type="submit" class="dv-btn dv-btn-approve">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Setujui
+      </button>
+      <button type="button" class="dv-btn dv-btn-revisi" onclick="openRevisiModal('penanaman')">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M15 9l-6 6M9 9l6 6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tolak / Revisi
+      </button>
+      <span class="dv-action-bar-info" id="actionBarInfo"></span>
+    </div>
+
+    <div class="dv-card">
+      <div class="dv-card-bar">
+        <label class="dv-checkall-wrap" for="checkAll">
+          <input type="checkbox" id="checkAll" class="dv-cb">
+          Pilih Semua
+        </label>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="dv-table">
+          <thead>
+            <tr>
+              <th style="width:40px"></th>
+              <th>ID Pohon</th>
+              <th>Jenis Pohon</th>
+              <th>Mitra</th>
+              <th>Tgl Tanam</th>
+              <th>Koordinat</th>
+              <th>Foto</th>
+              <th class="center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="dvTableBody">
+
+            <% if (data.length === 0) { %>
+            <tr>
+              <td colspan="8" style="padding:52px; text-align:center; color:#aac8b4">
+                Belum ada data pohon
+              </td>
+            </tr>
+            <% } %>
+
+            <% data.forEach(item => {
+              let fotoList = [];
+              try { fotoList = JSON.parse(item.foto_bukti_tanam || '[]'); } catch(e) { fotoList = []; }
+            %>
+            <tr class="dv-row">
+              <td class="center">
+                <% if (item.status_verifikasi !== 'disetujui') { %>
+                <input type="checkbox" name="selected_pohon"
+                       value="<%= item.id_pohon %>"
+                       class="dv-cb checkbox-item"
+                       onchange="updateCount()">
+                <% } %>
+              </td>
+              <td><span class="dv-id"><%= item.id_pohon %></span></td>
+              <td>
+                <div class="dv-nama"><%= item.jenisPohon?.nama_pohon || '—' %></div>
+                <% if (item.jenisPohon?.nama_latin) { %>
+                <div class="dv-latin"><%= item.jenisPohon.nama_latin %></div>
+                <% } %>
+              </td>
+              <td style="font-size:.84rem; color:#555"><%= item.mitra?.nama_mitra || '—' %></td>
+              <td style="font-size:.84rem; color:#555; white-space:nowrap">
+                <%= new Date(item.tgl_tanam).toLocaleDateString('id-ID', {
+                  day: '2-digit', month: 'short', year: 'numeric'
+                }) %>
+              </td>
+              <td>
+                <div class="dv-coord"><%= item.latitude %></div>
+                <div class="dv-coord"><%= item.longitude %></div>
+              </td>
+              <td>
+                <div class="dv-foto-links">
+                  <% if (fotoList.length === 0) { %>
+                    <span style="font-size:.75rem; color:#ccc">Tidak ada foto</span>
+                  <% } %>
+                  <% fotoList.forEach((foto, fi) => { %>
+                    <a href="/uploads/pohon/<%= foto %>" target="_blank" class="dv-foto-link">
+                      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                      </svg>
+                      Foto <%= fi + 1 %>
+                    </a>
+                  <% }) %>
+                </div>
+              </td>
+              <td class="center">
+                <%
+                  const stCls   = item.status_verifikasi === 'menunggu'  ? 'dv-badge-menunggu'
+                                : item.status_verifikasi === 'disetujui' ? 'dv-badge-disetujui'
+                                : 'dv-badge-revisi';
+                  const stLabel = item.status_verifikasi === 'menunggu'  ? 'Menunggu'
+                                : item.status_verifikasi === 'disetujui' ? 'Disetujui'
+                                : 'Revisi';
+                %>
+                <span class="dv-badge <%= stCls %>">
+                  <span class="dv-badge-dot"></span>
+                  <%= stLabel %>
+                </span>
+                <% if (item.status_verifikasi === 'revisi' && item.catatan_koreksi) { %>
+                <div class="dv-catatan-revisi">
+                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M12 9v4M12 17h.01" stroke-linecap="round"/>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  </svg>
+                  <%= item.catatan_koreksi %>
+                </div>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div class="dv-pagination">
+        <span class="dv-pg-info" id="dvPgInfo"></span>
+        <div class="dv-pg-btns" id="dvPgBtns"></div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+
+<!-- ══════════════════════════
+     PANEL: MONITORING 1
+══════════════════════════ -->
+<div id="panel-monitoring1" class="dv-panel">
+
+  <form action="/admin-wilayah/verifikasi-monitoring/approve" method="POST" id="formMon1">
+    <input type="hidden" name="id_penanaman" value="<%= penanaman.id_penanaman %>">
+    <input type="hidden" name="periode" value="1">
+
+    <!-- Action bar -->
+    <div class="dv-action-bar" id="actionBar-mon1">
+      <button type="submit" class="dv-btn dv-btn-approve">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Setujui
+      </button>
+      <button type="button" class="dv-btn dv-btn-revisi" onclick="openRevisiModal('monitoring1')">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M15 9l-6 6M9 9l6 6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tolak / Revisi
+      </button>
+      <span class="dv-action-bar-info" id="actionBarInfo-mon1"></span>
+    </div>
+
+    <div class="dv-card">
+      <div class="dv-card-bar">
+        <label class="dv-checkall-wrap" for="checkAll-mon1">
+          <input type="checkbox" id="checkAll-mon1" class="dv-cb"
+                 onchange="checkAllPanel('mon1', this)">
+          Pilih Semua
+        </label>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="dv-table">
+          <thead>
+            <tr>
+              <th style="width:40px"></th>
+              <th>ID Pohon</th>
+              <th>Jenis Pohon</th>
+              <th>Tinggi</th>
+              <th>Diameter</th>
+              <th>Kesehatan Batang</th>
+              <th>Deskripsi</th>
+              <th>Foto</th>
+              <th class="center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="mon1TableBody">
+
+            <% if (monitoring1.length === 0) { %>
+            <tr>
+              <td colspan="9" style="padding:52px; text-align:center; color:#aac8b4">
+                Belum ada data monitoring 1
+              </td>
+            </tr>
+            <% } %>
+
+            <% monitoring1.forEach(item => {
+              let fotoList = [];
+              try { fotoList = JSON.parse(item.foto_monitoring || '[]'); } catch(e) { fotoList = []; }
+            %>
+            <tr class="mon1-row">
+              <td class="center">
+                <% if (item.status_verifikasi !== 'disetujui') { %>
+                <input type="checkbox"
+                       name="selected_monitoring"
+                       value="<%= item.id_monitoring %>|<%= item.id_pohon %>"
+                       class="dv-cb mon1-cb"
+                       onchange="updateCountPanel('mon1')">
+                <% } %>
+              </td>
+              <td><span class="dv-id"><%= item.id_pohon %></span></td>
+              <td>
+                <div class="dv-nama"><%= item.pohon?.jenisPohon?.nama_pohon || '—' %></div>
+                <% if (item.pohon?.jenisPohon?.nama_latin) { %>
+                <div class="dv-latin"><%= item.pohon.jenisPohon.nama_latin %></div>
+                <% } %>
+              </td>
+              <td style="font-size:.84rem; color:#555"><%= item.tinggi_pohon %> m</td>
+              <td style="font-size:.84rem; color:#555"><%= item.diameter_pohon %> cm</td>
+              <td style="font-size:.84rem; color:#555"><%= item.kesehatan_batang %></td>
+              <td style="font-size:.84rem; color:#555; max-width:200px">
+                <%= item.deskripsi || '—' %>
+              </td>
+              <td>
+                <div class="dv-foto-links">
+                  <% if (fotoList.length === 0) { %>
+                    <span style="font-size:.75rem; color:#ccc">Tidak ada foto</span>
+                  <% } %>
+                  <% fotoList.forEach((foto, fi) => { %>
+                    <a href="/uploads/monitoring/<%= foto %>" target="_blank" class="dv-foto-link">
+                      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                      </svg>
+                      Foto <%= fi + 1 %>
+                    </a>
+                  <% }) %>
+                </div>
+              </td>
+              <td class="center">
+                <%
+                  const stCls1   = item.status_verifikasi === 'menunggu'  ? 'dv-badge-menunggu'
+                                 : item.status_verifikasi === 'disetujui' ? 'dv-badge-disetujui'
+                                 : 'dv-badge-revisi';
+                  const stLabel1 = item.status_verifikasi === 'menunggu'  ? 'Menunggu'
+                                 : item.status_verifikasi === 'disetujui' ? 'Disetujui'
+                                 : 'Revisi';
+                %>
+                <span class="dv-badge <%= stCls1 %>">
+                  <span class="dv-badge-dot"></span>
+                  <%= stLabel1 %>
+                </span>
+                <% if (item.status_verifikasi === 'revisi' && item.catatan_koreksi) { %>
+                <div class="dv-catatan-revisi">
+                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M12 9v4M12 17h.01" stroke-linecap="round"/>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  </svg>
+                  <%= item.catatan_koreksi %>
+                </div>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div class="dv-pagination">
+        <span class="dv-pg-info" id="mon1PgInfo"></span>
+        <div class="dv-pg-btns" id="mon1PgBtns"></div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+
+<!-- ══════════════════════════
+     PANEL: MONITORING 2
+══════════════════════════ -->
+<div id="panel-monitoring2" class="dv-panel">
+
+  <form action="/admin-wilayah/verifikasi-monitoring/approve" method="POST" id="formMon2">
+    <input type="hidden" name="id_penanaman" value="<%= penanaman.id_penanaman %>">
+    <input type="hidden" name="periode" value="2">
+
+    <!-- Action bar -->
+    <div class="dv-action-bar" id="actionBar-mon2">
+      <button type="submit" class="dv-btn dv-btn-approve">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Setujui
+      </button>
+      <button type="button" class="dv-btn dv-btn-revisi" onclick="openRevisiModal('monitoring2')">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M15 9l-6 6M9 9l6 6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tolak / Revisi
+      </button>
+      <span class="dv-action-bar-info" id="actionBarInfo-mon2"></span>
+    </div>
+
+    <div class="dv-card">
+      <div class="dv-card-bar">
+        <label class="dv-checkall-wrap" for="checkAll-mon2">
+          <input type="checkbox" id="checkAll-mon2" class="dv-cb"
+                 onchange="checkAllPanel('mon2', this)">
+          Pilih Semua
+        </label>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="dv-table">
+          <thead>
+            <tr>
+              <th style="width:40px"></th>
+              <th>ID Pohon</th>
+              <th>Jenis Pohon</th>
+              <th>Tinggi</th>
+              <th>Diameter</th>
+              <th>Kesehatan Batang</th>
+              <th>Deskripsi</th>
+              <th>Foto</th>
+              <th class="center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="mon2TableBody">
+
+            <% if (monitoring2.length === 0) { %>
+            <tr>
+              <td colspan="9" style="padding:52px; text-align:center; color:#aac8b4">
+                Belum ada data monitoring 2
+              </td>
+            </tr>
+            <% } %>
+
+            <% monitoring2.forEach(item => {
+              let fotoList = [];
+              try { fotoList = JSON.parse(item.foto_monitoring || '[]'); } catch(e) { fotoList = []; }
+            %>
+            <tr class="mon2-row">
+              <td class="center">
+                <% if (item.status_verifikasi !== 'disetujui') { %>
+                <input type="checkbox"
+                       name="selected_monitoring"
+                       value="<%= item.id_monitoring %>|<%= item.id_pohon %>"
+                       class="dv-cb mon2-cb"
+                       onchange="updateCountPanel('mon2')">
+                <% } %>
+              </td>
+              <td><span class="dv-id"><%= item.id_pohon %></span></td>
+              <td>
+                <div class="dv-nama"><%= item.pohon?.jenisPohon?.nama_pohon || '—' %></div>
+                <% if (item.pohon?.jenisPohon?.nama_latin) { %>
+                <div class="dv-latin"><%= item.pohon.jenisPohon.nama_latin %></div>
+                <% } %>
+              </td>
+              <td style="font-size:.84rem; color:#555"><%= item.tinggi_pohon %> m</td>
+              <td style="font-size:.84rem; color:#555"><%= item.diameter_pohon %> cm</td>
+              <td style="font-size:.84rem; color:#555"><%= item.kesehatan_batang %></td>
+              <td style="font-size:.84rem; color:#555; max-width:200px">
+                <%= item.deskripsi || '—' %>
+              </td>
+              <td>
+                <div class="dv-foto-links">
+                  <% if (fotoList.length === 0) { %>
+                    <span style="font-size:.75rem; color:#ccc">Tidak ada foto</span>
+                  <% } %>
+                  <% fotoList.forEach((foto, fi) => { %>
+                    <a href="/uploads/monitoring/<%= foto %>" target="_blank" class="dv-foto-link">
+                      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                      </svg>
+                      Foto <%= fi + 1 %>
+                    </a>
+                  <% }) %>
+                </div>
+              </td>
+              <td class="center">
+                <%
+                  const stCls2   = item.status_verifikasi === 'menunggu'  ? 'dv-badge-menunggu'
+                                 : item.status_verifikasi === 'disetujui' ? 'dv-badge-disetujui'
+                                 : 'dv-badge-revisi';
+                  const stLabel2 = item.status_verifikasi === 'menunggu'  ? 'Menunggu'
+                                 : item.status_verifikasi === 'disetujui' ? 'Disetujui'
+                                 : 'Revisi';
+                %>
+                <span class="dv-badge <%= stCls2 %>">
+                  <span class="dv-badge-dot"></span>
+                  <%= stLabel2 %>
+                </span>
+                <% if (item.status_verifikasi === 'revisi' && item.catatan_koreksi) { %>
+                <div class="dv-catatan-revisi">
+                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M12 9v4M12 17h.01" stroke-linecap="round"/>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  </svg>
+                  <%= item.catatan_koreksi %>
+                </div>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div class="dv-pagination">
+        <span class="dv-pg-info" id="mon2PgInfo"></span>
+        <div class="dv-pg-btns" id="mon2PgBtns"></div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+
+<!-- ══════════════════════════
+     PANEL: MONITORING 3
+══════════════════════════ -->
+<div id="panel-monitoring3" class="dv-panel">
+
+  <form action="/admin-wilayah/verifikasi-monitoring/approve" method="POST" id="formMon3">
+    <input type="hidden" name="id_penanaman" value="<%= penanaman.id_penanaman %>">
+    <input type="hidden" name="periode" value="3">
+
+    <!-- Action bar -->
+    <div class="dv-action-bar" id="actionBar-mon3">
+      <button type="submit" class="dv-btn dv-btn-approve">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Setujui
+      </button>
+      <button type="button" class="dv-btn dv-btn-revisi" onclick="openRevisiModal('monitoring3')">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M15 9l-6 6M9 9l6 6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tolak / Revisi
+      </button>
+      <span class="dv-action-bar-info" id="actionBarInfo-mon3"></span>
+    </div>
+
+    <div class="dv-card">
+      <div class="dv-card-bar">
+        <label class="dv-checkall-wrap" for="checkAll-mon3">
+          <input type="checkbox" id="checkAll-mon3" class="dv-cb"
+                 onchange="checkAllPanel('mon3', this)">
+          Pilih Semua
+        </label>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="dv-table">
+          <thead>
+            <tr>
+              <th style="width:40px"></th>
+              <th>ID Pohon</th>
+              <th>Jenis Pohon</th>
+              <th>Tinggi</th>
+              <th>Diameter</th>
+              <th>Kesehatan Batang</th>
+              <th>Deskripsi</th>
+              <th>Foto</th>
+              <th class="center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="mon3TableBody">
+
+            <% if (monitoring3.length === 0) { %>
+            <tr>
+              <td colspan="9" style="padding:52px; text-align:center; color:#aac8b4">
+                Belum ada data monitoring 3
+              </td>
+            </tr>
+            <% } %>
+
+            <% monitoring3.forEach(item => {
+              let fotoList = [];
+              try { fotoList = JSON.parse(item.foto_monitoring || '[]'); } catch(e) { fotoList = []; }
+            %>
+            <tr class="mon3-row">
+              <td class="center">
+                <% if (item.status_verifikasi !== 'disetujui') { %>
+                <input type="checkbox"
+                       name="selected_monitoring"
+                       value="<%= item.id_monitoring %>|<%= item.id_pohon %>"
+                       class="dv-cb mon3-cb"
+                       onchange="updateCountPanel('mon3')">
+                <% } %>
+              </td>
+              <td><span class="dv-id"><%= item.id_pohon %></span></td>
+              <td>
+                <div class="dv-nama"><%= item.pohon?.jenisPohon?.nama_pohon || '—' %></div>
+                <% if (item.pohon?.jenisPohon?.nama_latin) { %>
+                <div class="dv-latin"><%= item.pohon.jenisPohon.nama_latin %></div>
+                <% } %>
+              </td>
+              <td style="font-size:.84rem; color:#555"><%= item.tinggi_pohon %> m</td>
+              <td style="font-size:.84rem; color:#555"><%= item.diameter_pohon %> cm</td>
+              <td style="font-size:.84rem; color:#555"><%= item.kesehatan_batang %></td>
+              <td style="font-size:.84rem; color:#555; max-width:200px">
+                <%= item.deskripsi || '—' %>
+              </td>
+              <td>
+                <div class="dv-foto-links">
+                  <% if (fotoList.length === 0) { %>
+                    <span style="font-size:.75rem; color:#ccc">Tidak ada foto</span>
+                  <% } %>
+                  <% fotoList.forEach((foto, fi) => { %>
+                    <a href="/uploads/monitoring/<%= foto %>" target="_blank" class="dv-foto-link">
+                      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                      </svg>
+                      Foto <%= fi + 1 %>
+                    </a>
+                  <% }) %>
+                </div>
+              </td>
+              <td class="center">
+                <%
+                  const stCls3   = item.status_verifikasi === 'menunggu'  ? 'dv-badge-menunggu'
+                                 : item.status_verifikasi === 'disetujui' ? 'dv-badge-disetujui'
+                                 : 'dv-badge-revisi';
+                  const stLabel3 = item.status_verifikasi === 'menunggu'  ? 'Menunggu'
+                                 : item.status_verifikasi === 'disetujui' ? 'Disetujui'
+                                 : 'Revisi';
+                %>
+                <span class="dv-badge <%= stCls3 %>">
+                  <span class="dv-badge-dot"></span>
+                  <%= stLabel3 %>
+                </span>
+                <% if (item.status_verifikasi === 'revisi' && item.catatan_koreksi) { %>
+                <div class="dv-catatan-revisi">
+                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M12 9v4M12 17h.01" stroke-linecap="round"/>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  </svg>
+                  <%= item.catatan_koreksi %>
+                </div>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div class="dv-pagination">
+        <span class="dv-pg-info" id="mon3PgInfo"></span>
+        <div class="dv-pg-btns" id="mon3PgBtns"></div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+
+<!-- ══════════════════════════
+     MODAL REVISI (shared, context-aware)
+══════════════════════════ -->
+<div class="dv-modal-overlay" id="modalRevisi">
+  <div class="dv-modal-box">
+
+    <div class="dv-modal-title">
+      Catatan Revisi
+      <button class="dv-modal-close" onclick="closeRevisiModal()">✕</button>
+    </div>
+
+    <!-- action & hidden fields filled dynamically by JS -->
+    <form id="formRevisi" method="POST">
+      <input type="hidden" name="id_penanaman" value="<%= penanaman.id_penanaman %>">
+      <input type="hidden" name="periode" id="revisiPeriode" value="">
+
+      <label class="dv-modal-label">Catatan untuk petugas</label>
+      <textarea name="catatan_koreksi" class="dv-modal-textarea"
+                required placeholder="Tuliskan alasan revisi atau perbaikan yang diperlukan..."></textarea>
+
+      <!-- selected items injected here -->
+      <div id="selectedContainer"></div>
+
+      <div class="dv-modal-actions">
+        <button type="button" class="dv-btn dv-btn-cancel" onclick="closeRevisiModal()">Batal</button>
+        <button type="submit" class="dv-btn dv-btn-save">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Simpan Revisi
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+<script>
+
+  /* ════ TAB SWITCH ════ */
+  function switchTab(name, btn) {
+    document.querySelectorAll('.dv-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.dv-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+
+  /* ════ PAGINATION (generic) ════ */
+  const PER_PAGE = 10;
+
+  function initPagination(rowClass, infoId, btnsId, pageRef) {
+    const rows = Array.from(document.querySelectorAll('.' + rowClass));
+    renderPage(rows, 1, infoId, btnsId, pageRef);
+  }
+
+  function renderPage(rows, page, infoId, btnsId, pageRef) {
+    pageRef.cur = page;
+    const total      = rows.length;
+    const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+    if (pageRef.cur > totalPages) pageRef.cur = totalPages;
+
+    const start = (pageRef.cur - 1) * PER_PAGE;
+    const end   = start + PER_PAGE;
+
+    rows.forEach((r, i) => {
+      r.style.display = (i >= start && i < end) ? '' : 'none';
+    });
+
+    const infoEl = document.getElementById(infoId);
+    infoEl.textContent = total === 0
+      ? 'Tidak ada data'
+      : `Menampilkan ${start + 1}–${Math.min(end, total)} dari ${total} data`;
+
+    const btns = document.getElementById(btnsId);
+    btns.innerHTML = '';
+
+    const mkBtn = (label, onClick, disabled, active) => {
+      const b = document.createElement('button');
+      b.type      = 'button';
+      b.className = 'dv-pg-btn' + (active ? ' active' : '');
+      b.disabled  = disabled;
+      if (typeof label === 'number') b.textContent = label;
+      else b.innerHTML = label;
+      b.addEventListener('click', onClick);
+      return b;
+    };
+
+    const chevL = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const chevR = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    btns.appendChild(mkBtn(chevL, () => renderPage(rows, pageRef.cur - 1, infoId, btnsId, pageRef), pageRef.cur <= 1));
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= pageRef.cur - 1 && i <= pageRef.cur + 1)) {
+        btns.appendChild(mkBtn(i, () => renderPage(rows, i, infoId, btnsId, pageRef), false, i === pageRef.cur));
+      } else if (i === pageRef.cur - 2 || i === pageRef.cur + 2) {
+        const dots = document.createElement('span');
+        dots.textContent = '…';
+        dots.style.cssText = 'color:#aac8b4;font-size:.78rem;padding:0 3px;align-self:center';
+        btns.appendChild(dots);
+      }
+    }
+
+    btns.appendChild(mkBtn(chevR, () => renderPage(rows, pageRef.cur + 1, infoId, btnsId, pageRef), pageRef.cur >= totalPages));
+  }
+
+
+  /* ════ CHECKBOX – PENANAMAN ════ */
+  const checkAll   = document.getElementById('checkAll');
+  const checkboxes = document.querySelectorAll('.checkbox-item');
+
+  checkAll.addEventListener('change', function() {
+    document.querySelectorAll('.dv-row:not([style*="none"]) .checkbox-item:not(:disabled)')
+      .forEach(cb => { cb.checked = this.checked; });
+    updateCount();
+  });
+
+  function updateCount() {
+    const checked = document.querySelectorAll('.checkbox-item:checked');
+    const total   = document.querySelectorAll('.checkbox-item:not(:disabled)').length;
+    const n       = checked.length;
+
+    checkAll.indeterminate = n > 0 && n < total;
+    checkAll.checked       = total > 0 && n === total;
+
+    const bar = document.getElementById('actionBar');
+    if (n > 0) {
+      bar.classList.add('visible');
+      document.getElementById('actionBarInfo').textContent = n + ' pohon dipilih';
+    } else {
+      bar.classList.remove('visible');
+    }
+  }
+
+
+  /* ════ CHECKBOX – MONITORING PANELS (generic) ════ */
+  function checkAllPanel(key, masterCb) {
+    const cbClass  = key + '-cb';
+    const rowClass = key + '-row';
+
+    document.querySelectorAll('.' + rowClass + ':not([style*="none"]) .' + cbClass + ':not(:disabled)')
+      .forEach(cb => { cb.checked = masterCb.checked; });
+
+    updateCountPanel(key);
+  }
+
+  function updateCountPanel(key) {
+    const cbClass  = '.' + key + '-cb';
+    const checked  = document.querySelectorAll(cbClass + ':checked');
+    const total    = document.querySelectorAll(cbClass + ':not(:disabled)').length;
+    const n        = checked.length;
+
+    const masterCb = document.getElementById('checkAll-' + key);
+    if (masterCb) {
+      masterCb.indeterminate = n > 0 && n < total;
+      masterCb.checked       = total > 0 && n === total;
+    }
+
+    const bar     = document.getElementById('actionBar-' + key);
+    const infoEl  = document.getElementById('actionBarInfo-' + key);
+
+    if (n > 0) {
+      bar.classList.add('visible');
+      infoEl.textContent = n + ' data dipilih';
+    } else {
+      bar.classList.remove('visible');
+    }
+  }
+
+
+  /* ════ MODAL REVISI ════ */
+  /*
+    context: 'penanaman' | 'monitoring1' | 'monitoring2' | 'monitoring3'
+  */
+  function openRevisiModal(context) {
+
+    let selectedItems = [];
+    let formAction    = '';
+    let inputName     = '';
+    let periodeVal    = '';
+
+    if (context === 'penanaman') {
+      selectedItems = Array.from(document.querySelectorAll('.checkbox-item:checked'));
+      formAction    = '/admin-wilayah/verifikasi-pohon/revisi';
+      inputName     = 'selected_pohon';
+    } else if (context === 'monitoring1') {
+      selectedItems = Array.from(document.querySelectorAll('.mon1-cb:checked'));
+      formAction    = '/admin-wilayah/verifikasi-monitoring/revisi';
+      inputName     = 'selected_monitoring';
+      periodeVal    = '1';
+    } else if (context === 'monitoring2') {
+      selectedItems = Array.from(document.querySelectorAll('.mon2-cb:checked'));
+      formAction    = '/admin-wilayah/verifikasi-monitoring/revisi';
+      inputName     = 'selected_monitoring';
+      periodeVal    = '2';
+    } else if (context === 'monitoring3') {
+      selectedItems = Array.from(document.querySelectorAll('.mon3-cb:checked'));
+      formAction    = '/admin-wilayah/verifikasi-monitoring/revisi';
+      inputName     = 'selected_monitoring';
+      periodeVal    = '3';
+    }
+
+    if (selectedItems.length === 0) {
+      alert('Pilih minimal 1 data terlebih dahulu');
+      return;
+    }
+
+    // Set form action & periode
+    const form = document.getElementById('formRevisi');
+    form.action = formAction;
+    document.getElementById('revisiPeriode').value = periodeVal;
+
+    // Inject hidden selected inputs
+    const container = document.getElementById('selectedContainer');
+    container.innerHTML = '';
+    selectedItems.forEach(item => {
+      const inp = document.createElement('input');
+      inp.type  = 'hidden';
+      inp.name  = inputName;
+      inp.value = item.value;
+      container.appendChild(inp);
+    });
+
+    document.getElementById('modalRevisi').classList.add('open');
+  }
+
+  function closeRevisiModal() {
+    document.getElementById('modalRevisi').classList.remove('open');
+  }
+
+  document.getElementById('modalRevisi').addEventListener('click', function(e) {
+    if (e.target === this) closeRevisiModal();
+  });
+
+
+  /* ════ INIT PAGINATION ════ */
+  const pgPenanaman  = { cur: 1 };
+  const pgMon1       = { cur: 1 };
+  const pgMon2       = { cur: 1 };
+  const pgMon3       = { cur: 1 };
+
+  (function init() {
+    const rowsPenanaman = Array.from(document.querySelectorAll('.dv-row'));
+    const rowsMon1      = Array.from(document.querySelectorAll('.mon1-row'));
+    const rowsMon2      = Array.from(document.querySelectorAll('.mon2-row'));
+    const rowsMon3      = Array.from(document.querySelectorAll('.mon3-row'));
+
+    renderPage(rowsPenanaman, 1, 'dvPgInfo',   'dvPgBtns',   pgPenanaman);
+    renderPage(rowsMon1,      1, 'mon1PgInfo', 'mon1PgBtns', pgMon1);
+    renderPage(rowsMon2,      1, 'mon2PgInfo', 'mon2PgBtns', pgMon2);
+    renderPage(rowsMon3,      1, 'mon3PgInfo', 'mon3PgBtns', pgMon3);
+  })();
+
+</script>

@@ -1,0 +1,996 @@
+<% layout('layouts/petugas') %>
+
+<style>
+  .badge-status {
+    display: inline-block; padding: 4px 10px;
+    border-radius: 20px; font-size: .7rem; font-weight: 600; letter-spacing: .3px;
+  }
+  .badge-menunggu  { background: #fff8e1; color: #f57f17; }
+  .badge-disetujui { background: #e8f5e9; color: #2d6a4f; }
+  .badge-revisi    { background: #ffebee; color: #b03030; }
+
+  .btn-icon {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: .78rem; font-weight: 500;
+    cursor: pointer; border: none;
+    transition: background .15s, transform .15s; text-decoration: none;
+  }
+  .btn-icon:hover { transform: translateY(-1px); }
+
+  /* Filter tabs */
+  .filter-tabs {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(116,198,157,.15);
+  }
+  .filter-tab {
+    padding: 6px 16px; border-radius: 20px;
+    border: 1.5px solid rgba(116,198,157,.3);
+    background: transparent; color: var(--green-deep);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .8rem; font-weight: 500;
+    cursor: pointer; transition: all .18s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .filter-tab:hover { background: rgba(216,243,220,.4); border-color: var(--green-bright); }
+  .filter-tab.active {
+    background: var(--green-bright); border-color: var(--green-bright);
+    color: #fff; font-weight: 600;
+  }
+  .filter-tab.active-menunggu  { background: #f57f17; border-color: #f57f17; color: #fff; }
+  .filter-tab.active-disetujui { background: var(--green-bright); border-color: var(--green-bright); color: #fff; }
+  .filter-tab.active-revisi    { background: #b03030; border-color: #b03030; color: #fff; }
+  .filter-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: .65rem; font-weight: 700;
+    background: rgba(255,255,255,.3);
+  }
+  .filter-tab:not(.active) .filter-count {
+    background: rgba(116,198,157,.2); color: var(--green-deep);
+  }
+
+  /* Paginasi */
+  .pagination {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(116,198,157,.15);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .pagination-info { font-size: .78rem; color: var(--brown-mid); }
+  .pagination-btns { display: flex; align-items: center; gap: 4px; }
+  .pg-btn {
+    min-width: 32px; height: 32px; border-radius: 8px;
+    border: 1.5px solid rgba(116,198,157,.3);
+    background: transparent; color: var(--green-deep);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .8rem; font-weight: 500; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 8px; transition: all .15s;
+  }
+  .pg-btn:hover:not(:disabled) { background: rgba(216,243,220,.5); border-color: var(--green-bright); }
+  .pg-btn.active { background: var(--green-bright); border-color: var(--green-bright); color: #fff; font-weight: 600; }
+  .pg-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 100; display: none;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: 20px;
+    padding: 32px; width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(26,71,49,.18);
+    animation: riseUp .3s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes riseUp {
+    from { opacity:0; transform:translateY(16px) scale(.97) }
+    to   { opacity:1; transform:translateY(0)    scale(1)   }
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--green-deep); margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    color: #aaa; font-size: 1.2rem; line-height: 1; transition: color .15s;
+  }
+  .modal-close:hover { color: var(--green-deep); }
+
+  .mform-group { margin-bottom: 16px; }
+  .mform-label {
+    display: block; font-size: .7rem; font-weight: 600;
+    letter-spacing: .8px; text-transform: uppercase;
+    color: var(--green-deep); margin-bottom: 6px;
+  }
+  .mform-wrap { position: relative; }
+  .mform-ico {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--green-bright); pointer-events: none;
+    display: flex; align-items: center;
+  }
+  .mform-input {
+    width: 100%; padding: 11px 12px 11px 38px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(116,198,157,.42);
+    background: rgba(216,243,220,.18);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem; color: var(--green-deep);
+    outline: none; box-sizing: border-box; appearance: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .mform-input::placeholder { color: #aac8b4; }
+  .mform-input:focus {
+    border-color: var(--green-bright);
+    background: rgba(216,243,220,.38);
+    box-shadow: 0 0 0 3px rgba(64,145,108,.11);
+  }
+
+  /* Upload foto */
+  .upload-area {
+    border: 1.5px dashed rgba(116,198,157,.5);
+    border-radius: 10px; background: rgba(216,243,220,.1);
+    padding: 20px; text-align: center; cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .upload-area:hover { border-color: var(--green-bright); background: rgba(216,243,220,.25); }
+  .upload-area input[type="file"] { display: none; }
+
+  /* ── Preview foto grid ── */
+  .foto-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .foto-preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border: 1.5px solid rgba(116,198,157,.3);
+  }
+  .foto-preview-item img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+  .foto-preview-item .foto-remove {
+    position: absolute; top: 3px; right: 3px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(176,48,48,.85); color: #fff;
+    border: none; cursor: pointer; font-size: .65rem;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+
+  .mform-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 11px;
+    background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+    color: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: .95rem; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(45,106,79,.35);
+    transition: transform .18s, box-shadow .18s; margin-top: 8px;
+  }
+  .mform-btn:hover  { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(45,106,79,.42); }
+  .mform-btn:active { transform: translateY(0);    box-shadow: 0 3px 8px rgba(45,106,79,.3);  }
+
+  .validasi-msg {
+    display: none; font-size: .75rem; color: #b03030;
+    text-align: center; padding: 8px 12px;
+    background: #fff0f0; border: 1px solid #f5c6c6;
+    border-radius: 8px; margin-top: 10px;
+  }
+
+  /* Lokasi GPS */
+  .gps-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 10px;
+    font-size: .8rem; margin-top: 6px;
+  }
+  .gps-ok      { background: #e8f5e9; color: #2d6a4f; }
+  .gps-loading { background: #fff8e1; color: #f57f17; }
+  .gps-error   { background: #ffebee; color: #b03030; }
+  .gps-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .gps-dot-ok      { background: #2d6a4f; }
+  .gps-dot-loading { background: #f57f17; animation: pulse .8s ease infinite; }
+  .gps-dot-error   { background: #b03030; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: .4; }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── QR Modal ── */
+  .qr-modal-box {
+    background: #fff; border-radius: 20px;
+    padding: 32px; width: 100%; max-width: 400px;
+    box-shadow: 0 20px 60px rgba(26,71,49,.18);
+    animation: riseUp .3s cubic-bezier(.22,1,.36,1);
+    text-align: center;
+  }
+  .qr-img-wrap {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 16px; border-radius: 14px;
+    border: 1.5px solid rgba(116,198,157,.25);
+    background: rgba(216,243,220,.1);
+    margin: 16px 0;
+  }
+  .qr-img-wrap img { width: 200px; height: 200px; display: block; }
+  .qr-info-row {
+    font-size: .78rem; color: var(--brown-mid);
+    margin-bottom: 4px;
+  }
+  .qr-info-val {
+    font-size: .85rem; font-weight: 600; color: var(--green-deep);
+  }
+  .qr-actions {
+    display: flex; gap: 10px; margin-top: 20px;
+  }
+  .qr-btn {
+    flex: 1; padding: 10px 0; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .85rem; font-weight: 600;
+    cursor: pointer; border: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .qr-btn:hover { transform: translateY(-1px); }
+  .qr-btn-print {
+    background: rgba(216,243,220,.6); color: var(--green-deep);
+    border: 1.5px solid rgba(116,198,157,.4);
+  }
+  .qr-btn-dl {
+    background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(45,106,79,.28);
+  }
+
+  @media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+  }
+</style>
+
+
+<!-- Header -->
+<div style="margin-bottom:24px">
+
+  <!-- Back + judul -->
+  <a href="/petugas-lapangan/penanaman"
+     style="display:inline-flex; align-items:center; gap:6px;
+            font-size:.82rem; color:var(--brown-mid); text-decoration:none;
+            margin-bottom:14px; transition:color .18s"
+     onmouseover="this.style.color='var(--green-deep)'"
+     onmouseout="this.style.color='var(--brown-mid)'">
+    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Kembali
+  </a>
+
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px">
+    <div>
+      <h2 style="font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700;
+                 color:var(--green-deep); margin-bottom:4px">Data Pohon</h2>
+      <div style="display:flex; align-items:center; gap:6px; font-size:.84rem; color:var(--brown-mid)">
+        <span style="font-weight:300"><%= penanaman.program.judul_program %></span>
+      </div>
+    </div>
+
+    <button onclick="openModal('createModal')"
+            style="display:inline-flex; align-items:center; gap:7px; padding:10px 18px;
+                   border-radius:11px; border:none; cursor:pointer;
+                   background:linear-gradient(135deg,var(--green-bright),var(--green-deep));
+                   color:#fff; font-family:'DM Sans',sans-serif; font-size:.875rem; font-weight:600;
+                   box-shadow:0 4px 14px rgba(45,106,79,.32); transition:transform .18s, box-shadow .18s"
+            onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 7px 20px rgba(45,106,79,.42)'"
+            onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(45,106,79,.32)'">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Tambah Pohon
+    </button>
+  </div>
+</div>
+
+
+<!-- Tabel -->
+<div style="background:#fff; border:1px solid rgba(116,198,157,.2); border-radius:16px; overflow:hidden">
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs">
+    <%
+      const cSemua    = data.length;
+      const cMenunggu = data.filter(d => d.status_verifikasi === 'menunggu').length;
+      const cDisetujui = data.filter(d => d.status_verifikasi === 'disetujui').length;
+      const cRevisi   = data.filter(d => d.status_verifikasi === 'revisi').length;
+    %>
+    <button class="filter-tab active" data-filter="semua" onclick="setFilter('semua', this)">
+      Semua <span class="filter-count"><%= cSemua %></span>
+    </button>
+    <button class="filter-tab" data-filter="menunggu" onclick="setFilter('menunggu', this)">
+      Menunggu <span class="filter-count"><%= cMenunggu %></span>
+    </button>
+    <button class="filter-tab" data-filter="disetujui" onclick="setFilter('disetujui', this)">
+      Disetujui <span class="filter-count"><%= cDisetujui %></span>
+    </button>
+    <button class="filter-tab" data-filter="revisi" onclick="setFilter('revisi', this)">
+      Revisi <span class="filter-count"><%= cRevisi %></span>
+    </button>
+  </div>
+
+  <div style="overflow-x:auto">
+    <table style="width:100%; border-collapse:collapse; font-size:.875rem; min-width:760px">
+      <thead>
+        <tr style="background:rgba(216,243,220,.3); border-bottom:1px solid rgba(116,198,157,.18)">
+          <th style="padding:13px 18px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">No</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">ID Pohon</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Jenis Pohon</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Mitra</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Tanggal Tanam</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Status</th>
+          <th style="padding:13px 16px; text-align:center; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+
+        <% if (data.length === 0) { %>
+        <tr>
+          <td colspan="7" style="padding:52px; text-align:center; color:#aac8b4">
+            Belum ada data pohon
+          </td>
+        </tr>
+        <% } %>
+
+        <% data.forEach((item, index) => { %>
+        <tr class="data-row"
+            data-status="<%= item.status_verifikasi %>"
+            style="border-bottom:1px solid rgba(116,198,157,.08); transition:background .15s"
+            onmouseover="this.style.background='rgba(240,250,244,.6)'"
+            onmouseout="this.style.background=''">
+
+          <td class="nomor" style="padding:13px 18px; color:#999; font-size:.8rem"><%= index + 1 %></td>
+
+          <td style="padding:13px 16px">
+          <span style="font-size:.84rem; color:var(--green-deep)">
+            <%= item.id_pohon %>
+          </span>
+          </td>
+
+          <td style="padding:13px 16px">
+            <div style="display:flex; align-items:center; gap:8px">
+              <div>
+                <div style="font-weight:500; color:var(--green-deep)">
+                  <%= item.jenisPohon?.nama_pohon || '-' %>
+                </div>
+                <% if (item.jenisPohon?.nama_latin) { %>
+                <div style="font-size:.72rem; color:#aac8b4; font-style:italic">
+                  <%= item.jenisPohon.nama_latin %>
+                </div>
+                <% } %>
+              </div>
+            </div>
+          </td>
+
+          <td style="padding:13px 16px; color:#666; font-size:.84rem">
+            <%= item.mitra?.nama_mitra || '—' %>
+          </td>
+
+          <td style="padding:13px 16px; color:#666; font-size:.84rem">
+            <%= new Date(item.tgl_tanam).toLocaleDateString('id-ID', {
+              day: '2-digit', month: 'short', year: 'numeric'
+            }) %>
+          </td>
+
+          <td style="padding:13px 16px">
+            <%
+              const stCls   = item.status_verifikasi === 'menunggu'  ? 'badge-menunggu'
+                            : item.status_verifikasi === 'disetujui' ? 'badge-disetujui'
+                            : 'badge-revisi';
+              const stLabel = item.status_verifikasi === 'menunggu'  ? 'Menunggu'
+                            : item.status_verifikasi === 'disetujui' ? 'Disetujui'
+                            : 'Revisi';
+            %>
+            <span class="badge-status <%= stCls %>"><%= stLabel %></span>
+          </td>
+
+          <td style="padding:13px 16px">
+            <div style="display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap">
+
+              <!-- Tombol Detail (ikon mata) -->
+              <a href="/petugas-lapangan/pohon/detail/<%= item.id_pohon %>"
+                 class="btn-icon"
+                 title="Lihat Detail"
+                 style="background:rgba(216,243,220,.5); color:var(--green-deep);
+                        border:1px solid rgba(116,198,157,.3)"
+                 onmouseover="this.style.background='rgba(116,198,157,.3)'"
+                 onmouseout="this.style.background='rgba(216,243,220,.5)'">
+                <!-- Ikon Mata -->
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Detail
+              </a>
+
+              <!-- Tombol QR Code -->
+              <%
+                const tglFormatted = new Date(item.tgl_tanam).toLocaleDateString('id-ID', {
+                  day: '2-digit', month: 'short', year: 'numeric'
+                });
+              %>
+              <button
+                class="btn-icon btn-qr"
+                title="Lihat QR Code"
+                data-id="<%= item.id_pohon %>"
+                data-jenis="<%= item.jenisPohon?.nama_pohon || '' %>"
+                data-mitra="<%= item.mitra?.nama_mitra || '' %>"
+                data-tgl="<%= tglFormatted %>"
+                style="background:rgba(232,245,255,.6); color:#1a6fa8;
+                       border:1px solid rgba(100,170,230,.3)"
+                onmouseover="this.style.background='rgba(100,170,230,.2)'"
+                onmouseout="this.style.background='rgba(232,245,255,.6)'">
+                <!-- Ikon QR -->
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17v3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                QR Code
+              </button>
+
+            </div>
+          </td>
+
+        </tr>
+        <% }) %>
+
+        <tr id="noResultRow" style="display:none">
+          <td colspan="7" style="padding:40px; text-align:center; color:#aac8b4; font-size:.875rem">
+            Tidak ada pohon dengan status ini
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginasi -->
+  <div class="pagination">
+    <span class="pagination-info" id="paginasiInfo"></span>
+    <div class="pagination-btns" id="paginasiBtns"></div>
+  </div>
+</div>
+
+
+<!-- ════════ MODAL TAMBAH POHON ════════ -->
+<div id="createModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">
+      Tambah Data Pohon
+      <button class="modal-close" onclick="closeModal('createModal')">✕</button>
+    </div>
+
+    <form action="/petugas-lapangan/pohon/create"
+          method="POST" enctype="multipart/form-data" id="createForm">
+        
+      <input type="hidden" name="id_penanaman" value="<%= penanaman.id_penanaman %>" />
+
+      <!-- Jenis Pohon -->
+      <div class="mform-group">
+        <label class="mform-label">Jenis Pohon</label>
+        <div class="mform-wrap">
+          <span class="mform-ico">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M12 22V12" stroke-linecap="round"/>
+              <path d="M12 12C12 12 8 9 8 5C8 2.5 10 1 12 1C14 1 16 2.5 16 5C16 9 12 12 12 12Z"/>
+            </svg>
+          </span>
+          <select name="id_jenis_pohon" class="mform-input" required>
+            <option value="" disabled selected>Pilih jenis pohon</option>
+            <% jenisPohon.forEach(item => { %>
+            <option value="<%= item.id_jenis_pohon %>"><%= item.nama_pohon %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <!-- Mitra -->
+      <div class="mform-group">
+        <label class="mform-label">Mitra</label>
+        <div class="mform-wrap">
+          <span class="mform-ico">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <select name="id_mitra" class="mform-input" required>
+            <option value="" disabled selected>Pilih mitra</option>
+            <% mitra.forEach(item => { %>
+            <option value="<%= item.id_mitra %>"><%= item.nama_mitra %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tanggal Tanam -->
+      <div class="mform-group">
+        <label class="mform-label">Tanggal Tanam</label>
+        <div class="mform-wrap">
+          <span class="mform-ico">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18"/>
+            </svg>
+          </span>
+          <input type="date" name="tgl_tanam" class="mform-input" required />
+        </div>
+      </div>
+
+      <!-- GPS Status -->
+      <div class="mform-group">
+        <label class="mform-label">Lokasi GPS</label>
+        <div class="gps-status gps-loading" id="gpsStatus">
+          <div class="gps-dot gps-dot-loading"></div>
+          <span id="gpsText">Mengambil lokasi...</span>
+        </div>
+        <input type="hidden" name="latitude"  id="latitude" />
+        <input type="hidden" name="longitude" id="longitude" />
+      </div>
+
+      <!-- Foto Bukti -->
+      <div class="mform-group">
+        <label class="mform-label">
+          Foto Bukti Tanam
+          <span style="color:#aac8b4; font-weight:300; text-transform:none; letter-spacing:0; font-size:.68rem">(minimal 1 foto)</span>
+        </label>
+
+        <!-- Input file tersembunyi — dikelola via JS -->
+        <input type="file" id="fotoInput" name="foto_bukti_tanam"
+              multiple accept="image/jpg,image/jpeg,image/png"
+              onchange="handleFotoPreview(this)"
+              style="display:none" />
+
+        <!-- Input kamera tersembunyi -->
+        <input type="file" id="fotoKamera" name="foto_bukti_tanam"
+              accept="image/*" capture="environment"
+              onchange="handleFotoPreview(this)"
+              style="display:none" />
+
+        <!-- Tombol pilih -->
+        <div style="display:flex; gap:8px; margin-bottom:10px">
+          <button type="button"
+                  onclick="document.getElementById('fotoInput').click()"
+                  style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+                        padding:9px 12px; border-radius:9px; cursor:pointer; font-size:.8rem; font-weight:600;
+                        font-family:'DM Sans',sans-serif; color:var(--green-deep);
+                        background:rgba(216,243,220,.4); border:1.5px solid rgba(116,198,157,.4);
+                        transition:background .15s">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            Pilih dari File
+          </button>
+          <button type="button"
+                  onclick="document.getElementById('fotoKamera').click()"
+                  style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+                        padding:9px 12px; border-radius:9px; cursor:pointer; font-size:.8rem; font-weight:600;
+                        font-family:'DM Sans',sans-serif; color:#1a6fa8;
+                        background:rgba(232,245,255,.6); border:1.5px solid rgba(100,170,230,.3);
+                        transition:background .15s">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            Ambil Foto
+          </button>
+        </div>
+
+        <!-- Grid Preview -->
+        <div class="foto-preview-grid" id="fotoPreviewGrid" style="display:none"></div>
+
+        <!-- Info jumlah -->
+        <div id="fotoFooter" style="display:none; margin-top:8px;
+            align-items:center; justify-content:space-between">
+          <span id="fotoCount"
+                style="font-size:.78rem; font-weight:600; color:var(--green-bright)"></span>
+        </div>
+      </div>
+
+      <p id="createValidasi" class="validasi-msg">Silahkan lengkapi data</p>
+      <button type="submit" class="mform-btn">Simpan Data Pohon</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- ════════ MODAL QR CODE ════════ -->
+<div id="qrModal" class="modal-overlay">
+  <div class="qr-modal-box">
+    <div class="modal-title" style="justify-content:center; position:relative">
+      <span>QR Code Pohon</span>
+      <button class="modal-close" onclick="closeModal('qrModal')"
+              style="position:absolute; right:0; top:0">✕</button>
+    </div>
+
+    <!-- Area yang akan diprint -->
+    <div id="printArea">
+      <div style="font-size:.72rem; color:var(--brown-mid); margin-bottom:4px;
+                  text-align:center; letter-spacing:.5px" id="qrIdLabel">—</div>
+
+      <div class="qr-img-wrap">
+
+        <!-- Loading state -->
+        <div id="qrLoading" style="display:flex; flex-direction:column; align-items:center;
+             justify-content:center; width:200px; height:200px; gap:10px">
+          <div style="width:32px; height:32px; border:3px solid rgba(116,198,157,.3);
+                      border-top-color:var(--green-bright); border-radius:50%;
+                      animation:spin .7s linear infinite"></div>
+          <span style="font-size:.75rem; color:#aac8b4">Memuat QR Code...</span>
+        </div>
+
+        <!-- Error state -->
+        <div id="qrError" style="display:none; flex-direction:column; align-items:center;
+             justify-content:center; width:200px; height:200px; gap:8px; text-align:center">
+          <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="#f57f17" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
+          </svg>
+          <span style="font-size:.75rem; color:#f57f17">Gagal memuat QR.<br>Coba buka halaman QR.</span>
+          <a id="qrFallbackLink" href="#" target="_blank"
+             style="font-size:.72rem; color:var(--green-bright); text-decoration:underline">
+            Buka Halaman QR
+          </a>
+        </div>
+
+        <!-- QR Image -->
+        <img id="qrPreviewImg" src="" alt="QR Code"
+             style="display:none; width:200px; height:200px; object-fit:contain" />
+
+      </div>
+
+      <div style="margin-bottom:2px; text-align:center">
+        <div class="qr-info-row">Jenis Pohon</div>
+        <div class="qr-info-val" id="qrJenis">—</div>
+      </div>
+      <div style="margin-bottom:2px; margin-top:8px; text-align:center">
+        <div class="qr-info-row">Mitra</div>
+        <div class="qr-info-val" id="qrMitra">—</div>
+      </div>
+      <div style="margin-top:8px; text-align:center">
+        <div class="qr-info-row">Tanggal Tanam</div>
+        <div class="qr-info-val" id="qrTgl">—</div>
+      </div>
+    </div>
+
+    <div class="qr-actions">
+      <button class="qr-btn qr-btn-print" onclick="cetakQr()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 6 2 18 2 18 9"/>
+          <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+          <rect x="6" y="14" width="12" height="8"/>
+        </svg>
+        Cetak
+      </button>
+      <button class="qr-btn qr-btn-dl" onclick="downloadQr()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  /* ════ GPS ════ */
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      document.getElementById('latitude').value  = position.coords.latitude;
+      document.getElementById('longitude').value = position.coords.longitude;
+      const status = document.getElementById('gpsStatus');
+      status.className = 'gps-status gps-ok';
+      status.innerHTML = `
+        <div class="gps-dot gps-dot-ok"></div>
+        <span>Lokasi berhasil diambil
+          (${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)})
+        </span>`;
+    },
+    function() {
+      const status = document.getElementById('gpsStatus');
+      status.className = 'gps-status gps-error';
+      status.innerHTML = `
+        <div class="gps-dot gps-dot-error"></div>
+        <span>Gagal mengambil lokasi. Aktifkan GPS dan izinkan akses lokasi.</span>`;
+    }
+  );
+
+    /* ════ PREVIEW FOTO ════ */
+    // Simpan semua file yang dipilih di sini
+    let masterFiles = [];
+
+    function handleFotoPreview(input) {
+      const newFiles = Array.from(input.files);
+      if (newFiles.length === 0) return;
+
+      // Gabungkan dengan file sebelumnya (hindari duplikat nama)
+      newFiles.forEach(f => {
+        if (!masterFiles.find(e => e.name === f.name && e.size === f.size)) {
+          masterFiles.push(f);
+        }
+      });
+
+      // Reset value input agar bisa pilih file sama lagi jika perlu
+      input.value = '';
+
+      syncInputFiles();
+      renderPreview();
+    }
+
+    function removeFile(idx) {
+      masterFiles.splice(idx, 1);
+      syncInputFiles();
+      renderPreview();
+    }
+
+    function syncInputFiles() {
+      // Masukkan masterFiles ke input via DataTransfer
+      const dt = new DataTransfer();
+      masterFiles.forEach(f => dt.items.add(f));
+      document.getElementById('fotoInput').files = dt.files;
+    }
+
+    function renderPreview() {
+      const grid   = document.getElementById('fotoPreviewGrid');
+      const footer = document.getElementById('fotoFooter');
+      const count  = document.getElementById('fotoCount');
+
+      grid.innerHTML = '';
+
+      if (masterFiles.length === 0) {
+        grid.style.display   = 'none';
+        footer.style.display = 'none';
+        return;
+      }
+
+      grid.style.display   = 'grid';
+      footer.style.display = 'flex';
+      count.textContent    = masterFiles.length + ' foto dipilih';
+
+      masterFiles.forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const item = document.createElement('div');
+          item.className = 'foto-preview-item';
+          item.innerHTML = `
+            <img src="${e.target.result}" alt="foto ${idx + 1}" />
+            <button type="button" class="foto-remove" onclick="removeFile(${idx})">✕</button>
+          `;
+          grid.appendChild(item);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+  /* ════ MODAL ════ */
+  function openModal(id)  { document.getElementById(id).classList.add('open');    }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+  });
+
+  /* ════ VALIDASI ════ */
+  document.getElementById('createForm').addEventListener('submit', function(e) {
+    const jenis    = this.id_jenis_pohon.value;
+    const mitra    = this.id_mitra.value;
+    const tgl      = this.tgl_tanam.value;
+    const fotoJml = masterFiles.length;
+    const msg      = document.getElementById('createValidasi');
+
+    if (!jenis || !mitra || !tgl || fotoJml === 0) {
+      e.preventDefault();
+      msg.style.display = 'block';
+      msg.textContent   = 'Silahkan lengkapi semua data termasuk foto';
+    } else {
+      msg.style.display = 'none';
+    }
+  });
+
+  /* ════ FILTER STATUS ════ */
+  let activeFilter = 'semua';
+  let allRows      = [];
+  let filteredRows = [];
+  let currentPage  = 1;
+  const PER_PAGE   = 10;
+
+  function setFilter(filter, btn) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-tab').forEach(b => { b.className = 'filter-tab'; });
+    if (filter === 'semua')     btn.className = 'filter-tab active';
+    if (filter === 'menunggu')  btn.className = 'filter-tab active-menunggu';
+    if (filter === 'disetujui') btn.className = 'filter-tab active-disetujui';
+    if (filter === 'revisi')    btn.className = 'filter-tab active-revisi';
+    applyFilter();
+  }
+
+  function applyFilter() {
+    filteredRows = activeFilter === 'semua'
+      ? [...allRows]
+      : allRows.filter(row => row.dataset.status === activeFilter);
+    renderPage(1);
+  }
+
+  function initRows() {
+    allRows      = Array.from(document.querySelectorAll('.data-row'));
+    filteredRows = [...allRows];
+    renderPage(1);
+  }
+
+  function renderPage(page) {
+    currentPage = page;
+    const total      = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * PER_PAGE;
+    const end   = start + PER_PAGE;
+    allRows.forEach(r => r.style.display = 'none');
+    filteredRows.slice(start, end).forEach((r, i) => {
+      r.style.display = '';
+      r.querySelector('.nomor').innerText = start + i + 1;
+    });
+    const noResult = document.getElementById('noResultRow');
+    if (noResult) noResult.style.display = total === 0 ? '' : 'none';
+    renderPaginasi(currentPage, totalPages, total, start, Math.min(end, total));
+  }
+
+  function renderPaginasi(page, totalPages, total, start, end) {
+    document.getElementById('paginasiInfo').textContent =
+      total === 0 ? 'Tidak ada data' :
+      `Menampilkan ${start + 1}–${end} dari ${total} pohon`;
+
+    const container = document.getElementById('paginasiBtns');
+    container.innerHTML = '';
+
+    const prev = document.createElement('button');
+    prev.className = 'pg-btn';
+    prev.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    prev.disabled = page <= 1;
+    prev.onclick  = () => renderPage(page - 1);
+    container.appendChild(prev);
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= page - 1 && i <= page + 1)) {
+        const btn = document.createElement('button');
+        btn.className   = 'pg-btn' + (i === page ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick     = () => renderPage(i);
+        container.appendChild(btn);
+      } else if (i === page - 2 || i === page + 2) {
+        const dots = document.createElement('span');
+        dots.textContent = '…';
+        dots.style.cssText = 'color:#aac8b4; font-size:.8rem; padding:0 4px; align-self:center';
+        container.appendChild(dots);
+      }
+    }
+
+    const next = document.createElement('button');
+    next.className = 'pg-btn';
+    next.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    next.disabled = page >= totalPages;
+    next.onclick  = () => renderPage(page + 1);
+    container.appendChild(next);
+  }
+
+  initRows();
+
+  /* ════ EVENT DELEGATION — tombol QR ════ */
+  document.getElementById('tableBody').addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-qr');
+    if (!btn) return;
+    openQrModal(
+      btn.dataset.id,
+      btn.dataset.jenis,
+      btn.dataset.mitra,
+      btn.dataset.tgl
+    );
+  });
+
+
+  /* ════ QR CODE MODAL ════ */
+  let _currentQrId = '';
+
+  function openQrModal(idPohon, jenis, mitra, tgl) {
+    _currentQrId = idPohon;
+
+    // Isi info teks
+    document.getElementById('qrIdLabel').textContent = idPohon;
+    document.getElementById('qrJenis').textContent   = jenis || '—';
+    document.getElementById('qrMitra').textContent   = mitra || '—';
+    document.getElementById('qrTgl').textContent     = tgl   || '—';
+
+    // Set fallback link
+    const fallback = document.getElementById('qrFallbackLink');
+    if (fallback) fallback.href = `/petugas-lapangan/pohon/qr/${idPohon}`;
+
+    // Reset state gambar
+    const img     = document.getElementById('qrPreviewImg');
+    const loading = document.getElementById('qrLoading');
+    const errMsg  = document.getElementById('qrError');
+
+    img.style.display     = 'none';
+    loading.style.display = 'flex';
+    errMsg.style.display  = 'none';
+
+    // Minta server generate & simpan QR terlebih dahulu,
+    // lalu tampilkan file statisnya dari /uploads/qrcode/
+    fetch(`/petugas-lapangan/pohon/qr/${idPohon}`, { method: 'GET' })
+      .then(res => {
+        // Route qr/:id me-render HTML (qrcode view), bukan API.
+        // Kita tidak parse response-nya — server sudah generate file PNG-nya.
+        // Langsung set img src ke file statis.
+        img.src = `/uploads/qrcode/${idPohon}.png?t=${Date.now()}`;
+      })
+      .catch(() => {
+        // Jika fetch gagal, tetap coba tampilkan file statis
+        img.src = `/uploads/qrcode/${idPohon}.png?t=${Date.now()}`;
+      });
+
+    img.onload = function() {
+      loading.style.display = 'none';
+      img.style.display     = 'block';
+      errMsg.style.display  = 'none';
+    };
+
+    img.onerror = function() {
+      loading.style.display = 'none';
+      img.style.display     = 'none';
+      errMsg.style.display  = 'flex';
+    };
+
+    openModal('qrModal');
+  }
+
+  /* ── Cetak QR ── */
+  function cetakQr() {
+    window.print();
+  }
+
+  /* ── Download QR ── */
+  function downloadQr() {
+    // Gunakan route download dari server agar file langsung di-download
+    const a    = document.createElement('a');
+    a.href     = `/petugas-lapangan/pohon/qr/download/${_currentQrId}`;
+    a.download = `QR-${_currentQrId}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+</script>

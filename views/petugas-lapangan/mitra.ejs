@@ -1,0 +1,729 @@
+<% layout('layouts/petugas') %>
+
+<style>
+  .btn-icon {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: .78rem; font-weight: 500;
+    cursor: pointer; border: none;
+    transition: background .15s, transform .15s;
+  }
+  .btn-icon:hover { transform: translateY(-1px); }
+
+  /* Paginasi */
+  .pagination {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(116,198,157,.15);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .pagination-info { font-size: .78rem; color: var(--brown-mid); }
+  .pagination-btns { display: flex; align-items: center; gap: 4px; }
+  .pg-btn {
+    min-width: 32px; height: 32px; border-radius: 8px;
+    border: 1.5px solid rgba(116,198,157,.3);
+    background: transparent; color: var(--green-deep);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .8rem; font-weight: 500; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 8px; transition: all .15s;
+  }
+  .pg-btn:hover:not(:disabled) { background: rgba(216,243,220,.5); border-color: var(--green-bright); }
+  .pg-btn.active { background: var(--green-bright); border-color: var(--green-bright); color: #fff; font-weight: 600; }
+  .pg-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 100; display: none;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: 20px;
+    padding: 32px; width: 100%; max-width: 540px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(26,71,49,.18);
+    animation: riseUp .3s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes riseUp {
+    from { opacity:0; transform:translateY(16px) scale(.97) }
+    to   { opacity:1; transform:translateY(0)    scale(1)   }
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--green-deep); margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    color: #aaa; font-size: 1.2rem; line-height: 1; transition: color .15s;
+  }
+  .modal-close:hover { color: var(--green-deep); }
+
+  /* Form grid 2 kolom */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+
+  .mform-group { margin-bottom: 0; }
+  .mform-label {
+    display: block; font-size: .7rem; font-weight: 600;
+    letter-spacing: .8px; text-transform: uppercase;
+    color: var(--green-deep); margin-bottom: 6px;
+  }
+  .mform-wrap { position: relative; }
+  .mform-ico {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--green-bright); pointer-events: none;
+    display: flex; align-items: center;
+  }
+  .mform-input {
+    width: 100%; padding: 11px 12px 11px 38px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(116,198,157,.42);
+    background: rgba(216,243,220,.18);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem; color: var(--green-deep);
+    outline: none; box-sizing: border-box;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .mform-input::placeholder { color: #aac8b4; }
+  .mform-input:focus {
+    border-color: var(--green-bright);
+    background: rgba(216,243,220,.38);
+    box-shadow: 0 0 0 3px rgba(64,145,108,.11);
+  }
+  .mform-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 11px;
+    background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+    color: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: .95rem; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(45,106,79,.35);
+    transition: transform .18s, box-shadow .18s; margin-top: 16px;
+  }
+  .mform-btn:hover  { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(45,106,79,.42); }
+  .mform-btn:active { transform: translateY(0);    box-shadow: 0 3px 8px rgba(45,106,79,.3);  }
+
+  /* Divider dalam modal */
+  .form-section-label {
+    font-size: .65rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--green-bright);
+    grid-column: 1 / -1;
+    padding-top: 4px;
+    border-top: 1px solid rgba(116,198,157,.18);
+    margin-top: 4px;
+  }
+
+  /* Search */
+  .search-wrap { position: relative; }
+  .search-wrap input {
+    padding: 10px 14px 10px 38px; border-radius: 10px;
+    border: 1.5px solid rgba(116,198,157,.35);
+    background: rgba(255,255,255,.8);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .875rem; color: var(--green-deep);
+    outline: none; width: 220px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-wrap input:focus {
+    border-color: var(--green-bright);
+    box-shadow: 0 0 0 3px rgba(64,145,108,.1);
+  }
+  .search-wrap .search-ico {
+    position: absolute; left: 11px; top: 50%;
+    transform: translateY(-50%);
+    color: #aac8b4; pointer-events: none;
+  }
+
+  .validasi-msg {
+    display: none; font-size: .75rem; color: #b03030;
+    text-align: center; padding: 8px 12px;
+    background: #fff0f0; border: 1px solid #f5c6c6;
+    border-radius: 8px; margin-top: 12px;
+  }
+
+  .hapus-modal-box {
+    background: #fff; border-radius: 20px;
+    padding: 32px; width: 100%; max-width: 360px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(26,71,49,.18);
+    animation: riseUp .3s cubic-bezier(.22,1,.36,1);
+  }
+
+  /* Rekening info block */
+  .rek-block {
+    font-size: .78rem; line-height: 1.7;
+    color: #555;
+  }
+  .rek-block span { color: var(--green-deep); font-weight: 500; }
+
+  /* Responsive tabel */
+  @media (max-width: 640px) {
+    .search-wrap input { width: 160px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .full { grid-column: 1; }
+  }
+</style>
+
+
+<!-- Header -->
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px">
+  <div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700;
+               color:var(--green-deep); margin-bottom:3px">Data Mitra</h2>
+    <p style="font-size:.84rem; color:var(--brown-mid); font-weight:300">
+      Kelola data mitra penanaman pohon
+    </p>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-ico">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <input type="text" id="searchInput" placeholder="Cari nama atau lembaga..." />
+    </div>
+
+    <!-- Tambah -->
+    <button onclick="openModal('createModal')"
+            style="display:inline-flex; align-items:center; gap:7px; padding:10px 18px;
+                   border-radius:11px; border:none; cursor:pointer;
+                   background:linear-gradient(135deg,var(--green-bright),var(--green-deep));
+                   color:#fff; font-family:'DM Sans',sans-serif; font-size:.875rem; font-weight:600;
+                   box-shadow:0 4px 14px rgba(45,106,79,.32); transition:transform .18s, box-shadow .18s"
+            onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 7px 20px rgba(45,106,79,.42)'"
+            onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(45,106,79,.32)'">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Tambah Mitra
+    </button>
+
+  </div>
+</div>
+
+
+<!-- Tabel -->
+<div style="background:#fff; border:1px solid rgba(116,198,157,.2); border-radius:16px; overflow:hidden">
+  <div style="overflow-x:auto">
+    <table style="width:100%; border-collapse:collapse; font-size:.875rem; min-width:700px">
+      <thead>
+        <tr style="background:rgba(216,243,220,.3); border-bottom:1px solid rgba(116,198,157,.18)">
+          <th style="padding:13px 18px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">No</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Nama Mitra</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Lembaga</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Kontak</th>
+          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Rekening</th>
+          <th style="padding:13px 16px; text-align:center; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+
+        <% if (data.length === 0) { %>
+        <tr>
+          <td colspan="6" style="padding:52px; text-align:center; color:#aac8b4">
+            Belum ada data mitra
+          </td>
+        </tr>
+        <% } %>
+
+        <% data.forEach((item, index) => { %>
+        <tr class="data-row"
+            style="border-bottom:1px solid rgba(116,198,157,.08); transition:background .15s"
+            onmouseover="this.style.background='rgba(240,250,244,.6)'"
+            onmouseout="this.style.background=''">
+
+          <td class="nomor" style="padding:13px 18px; color:#999; font-size:.8rem"><%= index + 1 %></td>
+
+          <td class="nama-col" style="padding:13px 16px; font-weight:500; color:var(--green-deep)">
+            <%= item.nama_mitra %>
+          </td>
+
+          <td class="lembaga-col" style="padding:13px 16px; color:#666">
+            <%= item.lembaga || '—' %>
+          </td>
+
+          <td style="padding:13px 16px; color:#666; font-size:.84rem">
+            <div style="display:flex; align-items:center; gap:5px">
+              <%= item.kontak %>
+            </div>
+          </td>
+
+          <td style="padding:13px 16px">
+            <div class="rek-block">
+              <div><span><%= item.bank %></span> - <%= item.no_rekening %></div>
+              <div style="color:#479561; font-size:.72rem">a.n. <%= item.atas_nama_bank %></div>
+            </div>
+          </td>
+
+          <td style="padding:13px 16px; text-align:center">
+            <div style="display:flex; align-items:center; justify-content:center; gap:7px">
+
+              <!-- Edit -->
+              <button class="btn-icon btnEdit"
+                      style="background:rgba(216,243,220,.5); color:var(--green-deep); border:1px solid rgba(116,198,157,.3)"
+                      onmouseover="this.style.background='rgba(116,198,157,.3)'"
+                      onmouseout="this.style.background='rgba(216,243,220,.5)'"
+                      data-id="<%= item.id_mitra %>"
+                      data-nama="<%= item.nama_mitra %>"
+                      data-lembaga="<%= item.lembaga || '' %>"
+                      data-kontak="<%= item.kontak %>"
+                      data-norek="<%= item.no_rekening %>"
+                      data-bank="<%= item.bank %>"
+                      data-atasnama="<%= item.atas_nama_bank %>">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit
+              </button>
+
+              <!-- Hapus -->
+              <form action="/petugas-lapangan/mitra/delete/<%= item.id_mitra %>" method="POST"
+                    onsubmit="return confirmHapus(event, '<%= item.nama_mitra %>')">
+                <button type="submit" class="btn-icon"
+                        style="background:rgba(255,235,235,.6); color:#b03030; border:1px solid rgba(240,180,180,.35)"
+                        onmouseover="this.style.background='rgba(240,180,180,.4)'"
+                        onmouseout="this.style.background='rgba(255,235,235,.6)'">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                  Hapus
+                </button>
+              </form>
+
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+
+        <tr id="noResultRow" style="display:none">
+          <td colspan="6" style="padding:40px; text-align:center; color:#aac8b4; font-size:.875rem">
+            Tidak ada data yang cocok
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginasi -->
+  <div class="pagination">
+    <span class="pagination-info" id="paginasiInfo"></span>
+    <div class="pagination-btns" id="paginasiBtns"></div>
+  </div>
+</div>
+
+
+<!-- ════════ MODAL CREATE ════════ -->
+<div id="createModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">
+      Tambah Mitra
+      <button class="modal-close" onclick="closeModal('createModal')">✕</button>
+    </div>
+    <form action="/petugas-lapangan/mitra/create" method="POST" id="createForm">
+      <div class="form-grid">
+
+        <!-- Nama -->
+        <div class="mform-group full">
+          <label class="mform-label">Nama Mitra</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <input type="text" name="nama_mitra" placeholder="Nama lengkap mitra" class="mform-input" required />
+          </div>
+        </div>
+
+        <!-- Lembaga -->
+        <div class="mform-group full">
+          <label class="mform-label">Lembaga <span style="color:#aac8b4; font-weight:300; text-transform:none; letter-spacing:0">(opsional)</span></label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </span>
+            <input type="text" name="lembaga" placeholder="Nama lembaga/organisasi" class="mform-input" />
+          </div>
+        </div>
+
+        <!-- Kontak -->
+        <div class="mform-group full">
+          <label class="mform-label">Kontak</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3.08 4.18 2 2 0 0 1 5.07 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </span>
+            <input type="text" name="kontak" placeholder="Nomor telepon / WhatsApp" class="mform-input" required />
+          </div>
+        </div>
+
+        <!-- Divider rekening -->
+        <div class="form-section-label">Informasi Rekening</div>
+
+        <!-- Bank -->
+        <div class="mform-group">
+          <label class="mform-label">Bank</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                <line x1="12" y1="12" x2="12" y2="16"/>
+                <line x1="10" y1="14" x2="14" y2="14"/>
+              </svg>
+            </span>
+            <input type="text" name="bank" placeholder="Contoh: BRI, BNI, Mandiri" class="mform-input" required />
+          </div>
+        </div>
+
+        <!-- No Rekening -->
+        <div class="mform-group">
+          <label class="mform-label">Nomor Rekening</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="4" width="22" height="16" rx="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </span>
+            <input type="text" name="no_rekening" placeholder="Nomor rekening" class="mform-input" required />
+          </div>
+        </div>
+
+        <!-- Atas Nama -->
+        <div class="mform-group full">
+          <label class="mform-label">Atas Nama Rekening</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <input type="text" name="atas_nama_bank" placeholder="Nama pemilik rekening" class="mform-input" required />
+          </div>
+        </div>
+
+      </div>
+      <p id="createValidasi" class="validasi-msg">Silahkan lengkapi data</p>
+      <button type="submit" class="mform-btn">Simpan Mitra</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- ════════ MODAL EDIT ════════ -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">
+      Edit Mitra
+      <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+    </div>
+    <form id="editForm" method="POST">
+      <div class="form-grid">
+
+        <div class="mform-group full">
+          <label class="mform-label">Nama Mitra</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <input type="text" id="e_nama" name="nama_mitra" class="mform-input" required />
+          </div>
+        </div>
+
+        <div class="mform-group full">
+          <label class="mform-label">Lembaga <span style="color:#aac8b4; font-weight:300; text-transform:none; letter-spacing:0">(opsional)</span></label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </span>
+            <input type="text" id="e_lembaga" name="lembaga" class="mform-input" />
+          </div>
+        </div>
+
+        <div class="mform-group full">
+          <label class="mform-label">Kontak</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3.08 4.18 2 2 0 0 1 5.07 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </span>
+            <input type="text" id="e_kontak" name="kontak" class="mform-input" required />
+          </div>
+        </div>
+
+        <div class="form-section-label">Informasi Rekening</div>
+
+        <div class="mform-group">
+          <label class="mform-label">Bank</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+              </svg>
+            </span>
+            <input type="text" id="e_bank" name="bank" class="mform-input" required />
+          </div>
+        </div>
+
+        <div class="mform-group">
+          <label class="mform-label">Nomor Rekening</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="4" width="22" height="16" rx="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </span>
+            <input type="text" id="e_norek" name="no_rekening" class="mform-input" required />
+          </div>
+        </div>
+
+        <div class="mform-group full">
+          <label class="mform-label">Atas Nama Rekening</label>
+          <div class="mform-wrap">
+            <span class="mform-ico">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <input type="text" id="e_atasnama" name="atas_nama_bank" class="mform-input" required />
+          </div>
+        </div>
+
+      </div>
+      <p id="editValidasi" class="validasi-msg">Silahkan lengkapi data</p>
+      <button type="submit" class="mform-btn">Simpan Perubahan</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="hapusModal" class="modal-overlay">
+  <div class="hapus-modal-box">
+    <div style="width:52px;height:52px;border-radius:50%;background:#ffebee;
+                display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#b03030" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h3 style="font-family:'Playfair Display',serif; font-size:1.1rem;
+               color:var(--green-deep); margin-bottom:8px">Hapus Mitra?</h3>
+    <p id="hapusDesc" style="font-size:.875rem; color:var(--brown-mid); margin-bottom:22px"></p>
+    <div style="display:flex; gap:10px; justify-content:center">
+      <button onclick="closeModal('hapusModal')"
+              style="padding:9px 22px; border-radius:10px;
+                     border:1.5px solid rgba(116,198,157,.35);
+                     background:transparent; color:var(--green-deep);
+                     font-family:'DM Sans',sans-serif; font-size:.875rem;
+                     font-weight:500; cursor:pointer">
+        Batal
+      </button>
+      <button id="hapusConfirmBtn"
+              style="padding:9px 22px; border-radius:10px; border:none;
+                     background:#c0392b; color:#fff;
+                     font-family:'DM Sans',sans-serif; font-size:.875rem;
+                     font-weight:600; cursor:pointer">
+        Ya, Hapus
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  /* ════ MODAL ════ */
+  function openModal(id)  { document.getElementById(id).classList.add('open');    }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+  });
+
+  /* ════ EDIT BUTTON ════ */
+  document.querySelectorAll('.btnEdit').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const d = this.dataset;
+      document.getElementById('e_nama').value     = d.nama;
+      document.getElementById('e_lembaga').value  = d.lembaga;
+      document.getElementById('e_kontak').value   = d.kontak;
+      document.getElementById('e_bank').value     = d.bank;
+      document.getElementById('e_norek').value    = d.norek;
+      document.getElementById('e_atasnama').value = d.atasnama;
+      document.getElementById('editForm').action  =
+        '/petugas-lapangan/mitra/update/' + d.id;
+      openModal('editModal');
+    });
+  });
+
+  /* ════ KONFIRMASI HAPUS ════ */
+  let pendingHapusForm = null;
+
+  function confirmHapus(e, nama) {
+    e.preventDefault();
+    pendingHapusForm = e.target.closest('form');
+    document.getElementById('hapusDesc').textContent =
+      'Mitra "' + nama + '" akan dihapus permanen dan tidak dapat dikembalikan.';
+    openModal('hapusModal');
+  }
+
+  document.getElementById('hapusConfirmBtn').addEventListener('click', () => {
+    if (pendingHapusForm) pendingHapusForm.submit();
+  });
+
+  /* ════ VALIDASI ════ */
+  document.getElementById('createForm').addEventListener('submit', function(e) {
+    const nama   = this.nama_mitra.value.trim();
+    const kontak = this.kontak.value.trim();
+    const bank   = this.bank.value.trim();
+    const norek  = this.no_rekening.value.trim();
+    const an     = this.atas_nama_bank.value.trim();
+    const msg    = document.getElementById('createValidasi');
+    if (!nama || !kontak || !bank || !norek || !an) {
+      e.preventDefault();
+      msg.style.display = 'block';
+      msg.textContent   = 'Silahkan lengkapi data';
+    } else {
+      msg.style.display = 'none';
+    }
+  });
+
+  document.getElementById('editForm').addEventListener('submit', function(e) {
+    const nama   = document.getElementById('e_nama').value.trim();
+    const kontak = document.getElementById('e_kontak').value.trim();
+    const bank   = document.getElementById('e_bank').value.trim();
+    const norek  = document.getElementById('e_norek').value.trim();
+    const an     = document.getElementById('e_atasnama').value.trim();
+    const msg    = document.getElementById('editValidasi');
+    if (!nama || !kontak || !bank || !norek || !an) {
+      e.preventDefault();
+      msg.style.display = 'block';
+      msg.textContent   = 'Silahkan lengkapi data';
+    } else {
+      msg.style.display = 'none';
+    }
+  });
+
+  document.querySelectorAll('.mform-input').forEach(el => {
+    el.addEventListener('input', () => {
+      document.getElementById('createValidasi').style.display = 'none';
+      document.getElementById('editValidasi').style.display   = 'none';
+    });
+  });
+
+  /* ════ PAGINASI ════ */
+  const PER_PAGE = 7;
+  let allRows = [], filteredRows = [], currentPage = 1;
+
+  function initRows() {
+    allRows      = Array.from(document.querySelectorAll('.data-row'));
+    filteredRows = [...allRows];
+    renderPage(1);
+  }
+
+  function renderPage(page) {
+    currentPage = page;
+    const total      = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * PER_PAGE;
+    const end   = start + PER_PAGE;
+    allRows.forEach(r => r.style.display = 'none');
+    filteredRows.slice(start, end).forEach((r, i) => {
+      r.style.display = '';
+      r.querySelector('.nomor').innerText = start + i + 1;
+    });
+    const noResult = document.getElementById('noResultRow');
+    if (noResult) noResult.style.display = total === 0 ? '' : 'none';
+    renderPaginasi(currentPage, totalPages, total, start, Math.min(end, total));
+  }
+
+  function renderPaginasi(page, totalPages, total, start, end) {
+    document.getElementById('paginasiInfo').textContent =
+      total === 0 ? 'Tidak ada data' :
+      `Menampilkan ${start + 1}–${end} dari ${total} mitra`;
+
+    const container = document.getElementById('paginasiBtns');
+    container.innerHTML = '';
+
+    const prev = document.createElement('button');
+    prev.className = 'pg-btn';
+    prev.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    prev.disabled = page <= 1;
+    prev.onclick  = () => renderPage(page - 1);
+    container.appendChild(prev);
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= page - 1 && i <= page + 1)) {
+        const btn = document.createElement('button');
+        btn.className   = 'pg-btn' + (i === page ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick     = () => renderPage(i);
+        container.appendChild(btn);
+      } else if (i === page - 2 || i === page + 2) {
+        const dots = document.createElement('span');
+        dots.textContent = '…';
+        dots.style.cssText = 'color:#aac8b4; font-size:.8rem; padding:0 4px; align-self:center';
+        container.appendChild(dots);
+      }
+    }
+
+    const next = document.createElement('button');
+    next.className = 'pg-btn';
+    next.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    next.disabled = page >= totalPages;
+    next.onclick  = () => renderPage(page + 1);
+    container.appendChild(next);
+  }
+
+  /* ════ SEARCH ════ */
+  document.getElementById('searchInput').addEventListener('keyup', function() {
+    const keyword = this.value.toLowerCase();
+    filteredRows = allRows.filter(row => {
+      const nama    = row.querySelector('.nama-col').innerText.toLowerCase();
+      const lembaga = row.querySelector('.lembaga-col').innerText.toLowerCase();
+      return nama.includes(keyword) || lembaga.includes(keyword);
+    });
+    renderPage(1);
+  });
+
+  initRows();
+</script>

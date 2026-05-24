@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daftar — BabyTree</title>
+  <link href="/output.css" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --green-deep: #1a4731;
+      --green-mid: #2d6a4f;
+      --green-bright: #40916c;
+      --green-light: #74c69d;
+      --green-pale: #d8f3dc;
+      --brown-mid: #7d5a3c;
+      --brown-dark: #5c3d1e;
+      --cream: #fdf8f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(ellipse 80% 60% at 15% 10%, #b7e4c7 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 85% 85%, rgba(160, 118, 90, 0.15) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 70% at 70% 5%, #d8f3dc 0%, transparent 50%),
+        var(--cream);
+      overflow-x: hidden;
+      padding: 40px 16px;
+    }
+
+    .leaf {
+      position: fixed;
+      opacity: .13;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .leaf-1 { top: -60px; left: -60px; width: 320px; transform: rotate(-20deg); }
+    .leaf-2 { bottom: -80px; right: -80px; width: 400px; transform: rotate(160deg); }
+    .leaf-3 { top: 42%; left: -35px; width: 190px; transform: rotate(30deg); }
+    .leaf-4 { top: 8%; right: -20px; width: 170px; transform: rotate(-45deg); }
+
+    .card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      padding: 44px 40px 40px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(116, 198, 157, 0.28);
+      border-radius: 24px;
+      box-shadow: 0 8px 40px rgba(26, 71, 49, 0.16), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+      animation: riseUp .65s cubic-bezier(.22, 1, .36, 1) both;
+    }
+
+    @keyframes riseUp {
+      from { opacity: 0; transform: translateY(28px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .icon-badge {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 6px 18px rgba(45, 106, 79, .32);
+      animation: badgePop .5s .25s cubic-bezier(.34, 1.56, .64, 1) both;
+    }
+
+    @keyframes badgePop {
+      from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--green-deep);
+      text-align: center;
+      letter-spacing: -.4px;
+      line-height: 1.2;
+      margin: 0 0 6px;
+    }
+
+    .card-subtitle {
+      font-size: .84rem;
+      color: var(--brown-mid);
+      text-align: center;
+      font-weight: 300;
+      margin: 0 0 24px;
+    }
+
+    /* ══════════════════════════════
+       RADIO ROLE SELECTOR
+    ══════════════════════════════ */
+    .role-section {
+      margin-bottom: 20px;
+    }
+
+    .role-section-label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .9px;
+      text-transform: uppercase;
+      color: var(--green-deep);
+      margin-bottom: 10px;
+    }
+
+    .role-options {
+      display: flex;
+      gap: 10px;
+    }
+
+    .role-option {
+      flex: 1;
+      position: relative;
+    }
+
+    /* Sembunyikan input radio native */
+    .role-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .role-option label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 11px 14px;
+      border-radius: 11px;
+      border: 1.5px solid rgba(116, 198, 157, .40);
+      background: rgba(216, 243, 220, .15);
+      cursor: pointer;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+      user-select: none;
+    }
+
+    .role-option label:hover {
+      border-color: var(--green-light);
+      background: rgba(216, 243, 220, .30);
+    }
+
+    /* Lingkaran custom radio */
+    .radio-dot {
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      border: 2px solid rgba(116, 198, 157, .6);
+      background: #fff;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+
+    .radio-dot::after {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #fff;
+      transform: scale(0);
+      transition: transform .18s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    .role-option input[type="radio"]:checked + label {
+      border-color: var(--green-bright);
+      background: rgba(64, 145, 108, .08);
+      box-shadow: 0 0 0 3px rgba(64, 145, 108, .10);
+    }
+
+    .role-option input[type="radio"]:checked + label .radio-dot {
+      border-color: var(--green-bright);
+      background: var(--green-bright);
+    }
+
+    .role-option input[type="radio"]:checked + label .radio-dot::after {
+      transform: scale(1);
+    }
+
+    .role-option-text {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .role-option-title {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--green-deep);
+      line-height: 1;
+    }
+
+    .role-option-desc {
+      font-size: .70rem;
+      color: var(--brown-mid);
+      font-weight: 300;
+    }
+
+    /* ══════════════════════════════
+       FORM FIELDS
+    ══════════════════════════════ */
+    .field-label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .9px;
+      text-transform: uppercase;
+      color: var(--green-deep);
+      margin-bottom: 7px;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .input-wrap .ico-left {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--green-bright);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 12px 13px 12px 40px;
+      border-radius: 11px;
+      border: 1.5px solid rgba(116, 198, 157, .42);
+      background: rgba(216, 243, 220, .18);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .92rem;
+      color: var(--green-deep);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+
+    .input-wrap input::placeholder { color: #aac8b4; }
+
+    .input-wrap input:focus {
+      border-color: var(--green-bright);
+      background: rgba(216, 243, 220, .40);
+      box-shadow: 0 0 0 3px rgba(64, 145, 108, .12);
+    }
+
+    #password,
+    #konfirmasi_password {
+      padding-right: 42px;
+    }
+
+    .eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #aac8b4;
+      display: flex;
+      align-items: center;
+      padding: 0;
+      transition: color .2s;
+    }
+
+    .eye-btn:hover { color: var(--green-bright); }
+
+    .validasi-msg {
+      display: none;
+      font-size: .78rem;
+      color: #b03030;
+      text-align: center;
+      margin-top: 12px;
+      padding: 9px 12px;
+      background: #fff0f0;
+      border: 1px solid #f5c6c6;
+      border-radius: 8px;
+      animation: fadeInDown .2s ease;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-daftar {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--green-bright) 0%, var(--green-deep) 100%);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .97rem;
+      font-weight: 600;
+      letter-spacing: .3px;
+      cursor: pointer;
+      box-shadow: 0 5px 18px rgba(45, 106, 79, .38);
+      transition: transform .18s, box-shadow .18s;
+    }
+
+    .btn-daftar:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 9px 26px rgba(45, 106, 79, .46);
+    }
+
+    .btn-daftar:active {
+      transform: translateY(0);
+      box-shadow: 0 3px 10px rgba(45, 106, 79, .32);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 22px 0 18px;
+      font-size: .72rem;
+      letter-spacing: .6px;
+      color: #b5cfbb;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(116, 198, 157, .35), transparent);
+    }
+
+    .login-row {
+      text-align: center;
+      font-size: .84rem;
+      color: var(--brown-mid);
+    }
+
+    .login-row a {
+      font-weight: 600;
+      color: var(--green-bright);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    .login-row a:hover { color: var(--green-deep); }
+
+    .alert-error {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff0f0;
+      border: 1px solid #f5c6c6;
+      color: #b03030;
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-size: .83rem;
+      margin-bottom: 18px;
+    }
+
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 1;
+      animation: floatUp linear infinite;
+      opacity: 0;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      5%   { opacity: .45; }
+      95%  { opacity: .45; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Leaf SVGs -->
+  <svg class="leaf leaf-1" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100 180 C20 140 10 60 100 20 C190 60 180 140 100 180Z" fill="#2d6a4f" />
+    <line x1="100" y1="20" x2="100" y2="180" stroke="#1a4731" stroke-width="2" />
+    <line x1="100" y1="80" x2="60" y2="60" stroke="#1a4731" stroke-width="1.2" />
+    <line x1="100" y1="100" x2="140" y2="80" stroke="#1a4731" stroke-width="1.2" />
+    <line x1="100" y1="120" x2="65" y2="105" stroke="#1a4731" stroke-width="1.2" />
+    <line x1="100" y1="140" x2="135" y2="125" stroke="#1a4731" stroke-width="1.2" />
+  </svg>
+  <svg class="leaf leaf-2" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100 180 C20 140 10 60 100 20 C190 60 180 140 100 180Z" fill="#40916c" />
+    <line x1="100" y1="20" x2="100" y2="180" stroke="#2d6a4f" stroke-width="2" />
+  </svg>
+  <svg class="leaf leaf-3" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100 180 C20 140 10 60 100 20 C190 60 180 140 100 180Z" fill="#74c69d" />
+  </svg>
+  <svg class="leaf leaf-4" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100 180 C20 140 10 60 100 20 C190 60 180 140 100 180Z" fill="#7d5a3c" />
+  </svg>
+
+  <!-- Card -->
+  <div class="card">
+
+    <!-- Badge -->
+    <div class="icon-badge">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+        <path d="M12 22V12" stroke="#d8f3dc" stroke-width="1.8" stroke-linecap="round" />
+        <path d="M12 12C12 12 8 9 8 5C8 2.5 10 1 12 1C14 1 16 2.5 16 5C16 9 12 12 12 12Z" fill="#74c69d" />
+        <path d="M12 14C12 14 7 11.5 5 8C3.5 5.5 4.5 3 6.5 2.5" stroke="#b7e4c7" stroke-width="1.4" stroke-linecap="round" />
+        <path d="M12 16C12 16 17 13.5 19 10C20.5 7.5 19.5 5 17.5 4.5" stroke="#b7e4c7" stroke-width="1.4" stroke-linecap="round" />
+        <path d="M7 21H17" stroke="#d8f3dc" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <h1 class="card-title">Buat Akun</h1>
+    <p class="card-subtitle">Bergabung dan mulai perjalanan hijau Anda</p>
+
+    <!-- Error flash dari server -->
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert-error">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <circle cx="12" cy="16" r=".6" fill="currentColor" />
+        </svg>
+        <%= error %>
+      </div>
+    <% } %>
+
+    <!-- Form -->
+    <form action="/register" method="POST" novalidate>
+
+      <!-- ══ PILIHAN TIPE AKUN ══ -->
+      <div class="role-section">
+        <span class="role-section-label">Daftar Sebagai</span>
+        <div class="role-options">
+
+          <!-- Umum -->
+          <div class="role-option">
+            <input
+              type="radio"
+              id="role_umum"
+              name="role"
+              value="donatur_umum"
+              checked
+              onchange="handleRoleChange(this)"
+            />
+            <label for="role_umum">
+              <div class="radio-dot"></div>
+              <div class="role-option-text">
+                <span class="role-option-title">Umum</span>
+                <span class="role-option-desc">Individu</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Perusahaan -->
+          <div class="role-option">
+            <input
+              type="radio"
+              id="role_corporate"
+              name="role"
+              value="donatur_corporate"
+              onchange="handleRoleChange(this)"
+            />
+            <label for="role_corporate">
+              <div class="radio-dot"></div>
+              <div class="role-option-text">
+                <span class="role-option-title">Perusahaan</span>
+                <span class="role-option-desc">Badan usaha / PT</span>
+              </div>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Nama -->
+      <div>
+        <label class="field-label" for="nama_lengkap">Nama</label>
+        <div class="input-wrap">
+          <span class="ico-left" id="namaIcon">
+            <!-- Icon Umum (default) -->
+            <svg id="iconUmum" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke-linecap="round" />
+            </svg>
+            <!-- Icon Perusahaan (tersembunyi) -->
+            <svg id="iconCorp" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
+              <rect x="2" y="7" width="20" height="14" rx="2" />
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke-linecap="round" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            id="nama_lengkap"
+            name="nama_lengkap"
+            placeholder="Nama lengkap Anda"
+            autocomplete="name"
+            required
+            value="<%= typeof formData !== 'undefined' ? formData.nama_lengkap || '' : '' %>"
+          />
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label class="field-label" for="email">Email</label>
+        <div class="input-wrap">
+          <span class="ico-left">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="3" />
+              <path d="M2 7l10 7 10-7" />
+            </svg>
+          </span>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="email@example.com"
+            autocomplete="email"
+            required
+            value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>"
+          />
+        </div>
+      </div>
+
+      <!-- Nomor Telepon -->
+      <div>
+        <label class="field-label" for="no_telepon">Nomor Telepon</label>
+        <div class="input-wrap">
+          <span class="ico-left">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3.08 4.18 2 2 0 0 1 5.07 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <input
+            type="tel"
+            id="no_telepon"
+            name="no_telepon"
+            placeholder="08xxxxxxxxxx"
+            autocomplete="tel"
+            required
+            value="<%= typeof formData !== 'undefined' ? formData.no_telepon || '' : '' %>"
+          />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label class="field-label" for="password">Password</label>
+        <div class="input-wrap">
+          <span class="ico-left">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </span>
+          <input type="password" id="password" name="password" placeholder="Minimal 8 karakter" autocomplete="new-password" required />
+          <button type="button" class="eye-btn" onclick="togglePw('password', 'eye-pw')" aria-label="Tampilkan password">
+            <svg id="eye-pw" width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Konfirmasi Password -->
+      <div>
+        <label class="field-label" for="konfirmasi_password">Konfirmasi Password</label>
+        <div class="input-wrap" style="margin-bottom:0">
+          <span class="ico-left">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              <path d="M9 16l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <input type="password" id="konfirmasi_password" name="konfirmasi_password" placeholder="Ulangi password Anda" autocomplete="new-password" required />
+          <button type="button" class="eye-btn" onclick="togglePw('konfirmasi_password', 'eye-confirm')" aria-label="Tampilkan konfirmasi password">
+            <svg id="eye-confirm" width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pesan validasi client-side -->
+      <p id="validasi-msg" class="validasi-msg">Silahkan lengkapi data</p>
+
+      <button type="submit" class="btn-daftar">Daftar Sekarang</button>
+    </form>
+
+    <div class="divider">atau</div>
+
+    <p class="login-row">
+      Sudah punya akun? <a href="/login">Login di sini</a>
+    </p>
+
+  </div>
+
+  <script>
+    /* ── Ganti placeholder & icon saat role berubah ── */
+    function handleRoleChange(input) {
+      const namaInput  = document.getElementById('nama_lengkap');
+      const iconUmum   = document.getElementById('iconUmum');
+      const iconCorp   = document.getElementById('iconCorp');
+
+      if (input.value === 'donatur_corporate') {
+        namaInput.placeholder  = 'Nama perusahaan Anda';
+        iconUmum.style.display = 'none';
+        iconCorp.style.display = 'block';
+      } else {
+        namaInput.placeholder  = 'Nama lengkap Anda';
+        iconUmum.style.display = 'block';
+        iconCorp.style.display = 'none';
+      }
+    }
+
+    /* ── Toggle password visibility ── */
+    function togglePw(fieldId, iconId) {
+      const inp  = document.getElementById(fieldId);
+      const icon = document.getElementById(iconId);
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      icon.innerHTML = show
+        ? `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+           <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+           <line x1="1" y1="1" x2="23" y2="23"/>`
+        : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+           <circle cx="12" cy="12" r="3"/>`;
+    }
+
+    /* ── Validasi Form ── */
+    const form        = document.querySelector('form');
+    const validasiMsg = document.getElementById('validasi-msg');
+
+    form.addEventListener('submit', function (e) {
+      const nama      = document.getElementById('nama_lengkap').value.trim();
+      const email     = document.getElementById('email').value.trim();
+      const telp      = document.getElementById('no_telepon').value.trim();
+      const pw        = document.getElementById('password').value;
+      const pwConfirm = document.getElementById('konfirmasi_password').value;
+      const isEmpty   = !nama || !email || !telp || !pw || !pwConfirm;
+      const pwMismatch = pw !== pwConfirm;
+
+      if (isEmpty || pwMismatch) {
+        e.preventDefault();
+        validasiMsg.style.display = 'block';
+        validasiMsg.textContent   = (pwMismatch && !isEmpty)
+          ? 'Password dan konfirmasi password tidak cocok'
+          : 'Silahkan lengkapi data';
+      } else {
+        validasiMsg.style.display = 'none';
+      }
+    });
+
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', () => {
+        validasiMsg.style.display = 'none';
+      });
+    });
+
+    /* ── Floating Particles ── */
+    const colors = ['#74c69d', '#40916c', '#c9a87c', '#b7e4c7', '#7d5a3c'];
+    for (let i = 0; i < 16; i++) {
+      const p    = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 7 + 3;
+      p.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${Math.random() * 100}vw;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        animation-duration:${Math.random() * 18 + 12}s;
+        animation-delay:${Math.random() * -20}s;
+        border-radius:${Math.random() > 0.5 ? '50%' : '30%'};
+      `;
+      document.body.appendChild(p);
+    }
+  </script>
+</body>
+
+</html>

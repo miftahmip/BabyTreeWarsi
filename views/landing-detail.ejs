@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= pageTitle %> — Baby Tree</title>
+  <link href="/output.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-deep:   #1a4731;
+      --green-mid:    #2d6a4f;
+      --green-bright: #40916c;
+      --green-light:  #74c69d;
+      --green-pale:   #d8f3dc;
+      --brown-mid:    #7d5a3c;
+      --brown-light:  #c9a87c;
+      --cream:        #fdf8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--green-deep); }
+
+    /* NAVBAR */
+    .navbar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(253,248,240,0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(116,198,157,.2);
+      padding: 0 48px; height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .navbar-brand {
+      display: flex; align-items: center; gap: 10px; text-decoration: none;
+    }
+    .navbar-brand img { height: 40px; width: auto; object-fit: contain; }
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem; font-weight: 700; color: var(--green-deep);
+    }
+    .navbar-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-outline {
+      padding: 8px 20px; border-radius: 10px;
+      border: 1.5px solid rgba(116,198,157,.5);
+      background: transparent; color: var(--green-deep);
+      font-family: 'DM Sans', sans-serif; font-size: .875rem; font-weight: 500;
+      cursor: pointer; text-decoration: none; transition: all .18s;
+    }
+    .btn-outline:hover { background: rgba(216,243,220,.4); border-color: var(--green-bright); }
+    .btn-solid {
+      padding: 8px 20px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+      color: #fff; font-family: 'DM Sans', sans-serif;
+      font-size: .875rem; font-weight: 600; cursor: pointer; text-decoration: none;
+      box-shadow: 0 4px 14px rgba(45,106,79,.3); transition: all .18s;
+    }
+    .btn-solid:hover { transform: translateY(-1px); }
+    .btn-brown {
+      padding: 8px 20px; border-radius: 10px;
+      border: 1.5px solid rgba(201,168,124,.6);
+      background: rgba(201,168,124,.12); color: var(--brown-mid);
+      font-family: 'DM Sans', sans-serif; font-size: .875rem; font-weight: 500;
+      cursor: pointer; text-decoration: none; transition: all .18s;
+    }
+    .btn-brown:hover { background: rgba(201,168,124,.25); }
+
+    /* BREADCRUMB */
+    .breadcrumb {
+      padding: 16px 48px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: .82rem; color: var(--brown-mid);
+      border-bottom: 1px solid rgba(116,198,157,.1);
+      background: rgba(255,255,255,.5);
+    }
+    .breadcrumb a { color: var(--green-bright); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    /* MAIN LAYOUT */
+    .detail-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 48px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 36px;
+      align-items: start;
+    }
+
+    /* DETAIL KIRI */
+    .detail-left {}
+
+    .detail-flyer {
+      width: 100%; max-height: 420px; object-fit: cover;
+      border-radius: 20px;
+      border: 1px solid rgba(116,198,157,.2);
+      margin-bottom: 28px;
+      background: var(--green-pale);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .detail-flyer img { width: 100%; max-height: 420px; object-fit: cover; border-radius: 20px; }
+
+
+    .detail-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 700; line-height: 1.25;
+      color: var(--green-deep); margin-bottom: 16px;
+    }
+
+    .detail-meta {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 24px;
+      border-bottom: 1px solid rgba(116,198,157,.15);
+    }
+    .detail-meta-item {
+      display: flex; align-items: center; gap: 7px;
+      font-size: .85rem; color: var(--brown-mid);
+    }
+    .detail-meta-item svg { color: var(--green-bright); flex-shrink: 0; }
+
+    .detail-section-title {
+      font-size: .72rem; font-weight: 600; letter-spacing: .8px;
+      text-transform: uppercase; color: var(--green-bright);
+      margin-bottom: 10px;
+    }
+    .detail-desc {
+      font-size: .95rem; line-height: 1.8; color: #555;
+      margin-bottom: 28px;
+    }
+
+
+    /* Info grid */
+    .info-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 28px;
+    }
+    .info-item {
+      background: #fff;
+      border: 1px solid rgba(116,198,157,.18);
+      border-radius: 12px; padding: 14px 16px;
+    }
+    .info-item-label {
+      font-size: .68rem; font-weight: 600; letter-spacing: .7px;
+      text-transform: uppercase; color: #aac8b4; margin-bottom: 4px;
+    }
+    .info-item-val {
+      font-size: .9rem; font-weight: 500; color: var(--green-deep);
+    }
+
+    /* FORM DONASI (kanan) */
+    .donasi-card {
+      background: #fff;
+      border: 1px solid rgba(116,198,157,.22);
+      border-radius: 20px; padding: 28px;
+      position: sticky; top: 88px;
+      box-shadow: 0 8px 32px rgba(26,71,49,.1);
+    }
+    .donasi-card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--green-deep); margin-bottom: 6px;
+    }
+    .donasi-card-harga {
+      font-size: 1.5rem; font-weight: 700; color: var(--green-bright);
+      margin-bottom: 20px;
+    }
+    .donasi-card-harga span {
+      font-size: .8rem; font-weight: 300; color: var(--brown-mid);
+    }
+
+    .form-label {
+      display: block; font-size: .7rem; font-weight: 600;
+      letter-spacing: .8px; text-transform: uppercase;
+      color: var(--green-deep); margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%; padding: 11px 14px; border-radius: 10px;
+      border: 1.5px solid rgba(116,198,157,.42);
+      background: rgba(216,243,220,.18);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .92rem; color: var(--green-deep);
+      outline: none; box-sizing: border-box;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .form-input:focus {
+      border-color: var(--green-bright);
+      background: rgba(216,243,220,.38);
+      box-shadow: 0 0 0 3px rgba(64,145,108,.11);
+    }
+
+    /* Quick pick pohon */
+    .quick-pick {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .pick-btn {
+      padding: 6px 14px; border-radius: 8px;
+      border: 1.5px solid rgba(116,198,157,.35);
+      background: transparent; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .8rem; font-weight: 500; color: var(--green-deep);
+      transition: all .15s;
+    }
+    .pick-btn:hover, .pick-btn.active {
+      background: var(--green-bright); color: #fff;
+      border-color: var(--green-bright);
+    }
+
+    .total-box {
+      background: var(--green-pale);
+      border-radius: 10px; padding: 12px 14px;
+      margin: 16px 0; display: flex;
+      align-items: center; justify-content: space-between;
+    }
+    .total-box-label { font-size: .8rem; color: var(--green-mid); }
+    .total-box-val {
+      font-size: 1.1rem; font-weight: 700; color: var(--green-deep);
+    }
+
+    .btn-donasi-main {
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+      color: #fff; font-family: 'DM Sans', sans-serif;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 5px 18px rgba(45,106,79,.38);
+      transition: transform .18s, box-shadow .18s;
+      text-decoration: none; display: block; text-align: center;
+    }
+    .btn-donasi-main:hover { transform: translateY(-2px); box-shadow: 0 9px 26px rgba(45,106,79,.46); }
+
+    .donasi-note {
+      text-align: center; font-size: .75rem; color: #aac8b4;
+      margin-top: 10px; line-height: 1.5;
+    }
+    .donasi-note a { color: var(--green-bright); text-decoration: none; }
+    .donasi-note a:hover { text-decoration: underline; }
+
+    /* MODAL KONFIRMASI */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(10, 30, 18, 0.55);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 22px;
+      padding: 36px 32px 28px;
+      max-width: 420px; width: 90%;
+      box-shadow: 0 24px 64px rgba(26,71,49,.22);
+      text-align: center;
+      animation: modalIn .28s cubic-bezier(.34,1.36,.64,1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.88) translateY(18px); }
+      to   { opacity: 1; transform: scale(1)  translateY(0); }
+    }
+
+    .modal-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--green-pale), #b7e4c7);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+    }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--green-deep); margin-bottom: 8px;
+    }
+    .modal-desc {
+      font-size: .875rem; color: #7a9e8a; line-height: 1.6;
+      margin-bottom: 6px;
+    }
+    .modal-summary {
+      background: var(--green-pale);
+      border-radius: 10px; padding: 10px 14px;
+      margin: 14px 0 22px;
+      font-size: .82rem; color: var(--green-deep);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .modal-summary-row {
+      display: flex; justify-content: space-between;
+    }
+    .modal-summary-row span:first-child { color: #7a9e8a; }
+    .modal-summary-row span:last-child  { font-weight: 600; }
+
+    .modal-actions {
+      display: flex; gap: 10px;
+    }
+    .modal-btn-cancel {
+      flex: 1; padding: 11px;
+      border-radius: 11px;
+      border: 1.5px solid rgba(116,198,157,.4);
+      background: transparent;
+      color: var(--green-mid);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .92rem; font-weight: 500;
+      cursor: pointer; transition: all .18s;
+    }
+    .modal-btn-cancel:hover { background: rgba(216,243,220,.4); }
+    .modal-btn-confirm {
+      flex: 1; padding: 11px;
+      border-radius: 11px; border: none;
+      background: linear-gradient(135deg, var(--green-bright), var(--green-deep));
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .92rem; font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(45,106,79,.3);
+      transition: all .18s;
+    }
+    .modal-btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(45,106,79,.4); }
+
+    /* Divider */
+    .divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 16px 0; font-size: .72rem; color: #b5cfbb;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: rgba(116,198,157,.25);
+    }
+
+    footer {
+      background: var(--green-deep);
+      color: rgba(255,255,255,.7);
+      padding: 40px 48px; text-align: center;
+      margin-top: 60px;
+    }
+    footer .footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 6px;
+    }
+    footer p { font-size: .82rem; font-weight: 300; }
+
+    @media (max-width: 900px) {
+      .navbar { padding: 0 20px; }
+      .breadcrumb { padding: 12px 20px; }
+      .detail-layout { grid-template-columns: 1fr; padding: 24px 20px; }
+      .donasi-card { position: static; }
+      footer { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <img src="/images/warsi.png" alt="Baby Tree" onerror="this.style.display='none'" />
+      <span class="brand-name">Baby Tree</span>
+    </a>
+    <div class="navbar-actions">
+      <a href="/login" class="btn-outline">Login</a>
+      <a href="/register" class="btn-solid">Daftar</a>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <a href="/">Beranda</a>
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Program Donasi</span>
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span style="color:var(--green-deep); font-weight:500"><%= program.judul_program %></span>
+  </div>
+
+  <!-- MAIN -->
+  <div class="detail-layout">
+
+    <!-- KIRI: Detail Program -->
+    <div class="detail-left">
+
+      <!-- Flyer -->
+      <% if (program.flyer_program) { %>
+      <div class="detail-flyer">
+        <img src="/uploads/program/<%= program.flyer_program %>" alt="<%= program.judul_program %>" />
+      </div>
+      <% } else { %>
+      <div class="detail-flyer" style="height:200px">
+        <svg width="52" height="52" fill="none" viewBox="0 0 24 24" stroke="#aac8b4" stroke-width="1.2">
+          <path d="M12 22V12" stroke-linecap="round"/>
+          <path d="M12 12C12 12 8 9 8 5C8 2.5 10 1 12 1C14 1 16 2.5 16 5C16 9 12 12 12 12Z"/>
+          <path d="M5 20h14" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <% } %>
+
+
+      <h1 class="detail-title"><%= program.judul_program %></h1>
+
+      <!-- Meta -->
+      <div class="detail-meta">
+        <%
+          const lokasi = [program.nama_kelurahan, program.nama_kecamatan,
+                          program.nama_kota, program.nama_provinsi]
+            .filter(Boolean).join(', ') || 'Indonesia';
+          const fmtTgl = (tgl) => tgl
+            ? new Date(tgl).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})
+            : '-';
+        %>
+        <div class="detail-meta-item">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <%= lokasi %>
+        </div>
+        <div class="detail-meta-item">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          <%= fmtTgl(program.tanggal_mulai) %> – <%= fmtTgl(program.tanggal_selesai) %>
+        </div>
+      </div>
+
+
+      <!-- Deskripsi -->
+      <div class="detail-section-title">Tentang Program</div>
+      <div class="detail-desc">
+        <%= program.deskripsi || 'Tidak ada deskripsi untuk program ini.' %>
+      </div>
+
+
+    </div>
+    <!-- /detail-left -->
+
+<!-- KANAN: Form Donasi -->
+<div>
+  <div class="donasi-card">
+    <div class="donasi-card-title">Donasikan Pohon</div>
+    <div class="donasi-card-harga">
+      Rp <%= Number(program.harga_pohon).toLocaleString('id-ID') %>
+      <span>/ pohon</span>
+    </div>
+
+    <form action="/donasi" method="POST">
+      <!-- Hidden: id_program -->
+      <input type="hidden" name="id_program" value="<%= program.id_program %>" />
+
+      <!-- Nama Lengkap -->
+      <div style="margin-bottom:12px">
+        <label class="form-label" for="inputNama">Nama</label>
+        <input type="text" id="inputNama" name="nama_lengkap" class="form-input"
+               placeholder="Nama lengkap / nama perusahaan" required />
+      </div>
+
+      <!-- Email -->
+      <div style="margin-bottom:20px">
+        <label class="form-label" for="inputEmail">Alamat Email</label>
+        <input type="email" id="inputEmail" name="email" class="form-input"
+               placeholder="contoh@email.com" required />
+      </div>
+
+      <!-- Pilihan cepat jumlah pohon -->
+      <label class="form-label">Pilih Jumlah Pohon</label>
+      <div class="quick-pick" id="quickPick">
+        <button type="button" class="pick-btn" onclick="setPohon(5,this)">5</button>
+        <button type="button" class="pick-btn" onclick="setPohon(10,this)">10</button>
+        <button type="button" class="pick-btn" onclick="setPohon(25,this)">25</button>
+        <button type="button" class="pick-btn" onclick="setPohon(50,this)">50</button>
+        <button type="button" class="pick-btn" onclick="setPohon(100,this)">100</button>
+      </div>
+
+      <!-- Input manual -->
+      <div style="margin-bottom:12px">
+        <label class="form-label">Atau masukkan jumlah yang diinginkan</label>
+        <input type="number" id="inputPohon" name="jumlah_pohon" class="form-input"
+               placeholder="Jumlah pohon" min="1" value="1"
+               oninput="hitungTotal()" required />
+      </div>
+
+      <!-- Total -->
+      <div class="total-box">
+        <span class="total-box-label">Total Donasi</span>
+        <span class="total-box-val" id="totalDonasi">
+          Rp <%= Number(program.harga_pohon).toLocaleString('id-ID') %>
+        </span>
+      </div>
+
+      <!-- Submit -->
+      <button type="button" class="btn-donasi-main" onclick="bukaKonfirmasi()">
+        Donasi Sekarang
+      </button>
+    </form>
+
+    <p class="donasi-note">
+      Belum punya akun? Anda akan diarahkan untuk mendaftar terlebih dahulu.<br/>
+    </p>
+
+    <div class="divider">info program</div>
+
+    <div style="font-size:.78rem; color:var(--brown-mid); line-height:1.7">
+      <div style="display:flex; gap:6px; align-items:flex-start; margin-bottom:6px">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--green-bright)" stroke-width="2" style="flex-shrink:0; margin-top:2px">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Monitoring berkala dan laporan perkembangan
+      </div>
+      <div style="display:flex; gap:6px; align-items:flex-start">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--green-bright)" stroke-width="2" style="flex-shrink:0; margin-top:2px">
+          <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        Lokasi: <%= lokasi %>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- /form donasi -->
+
+  </div>
+
+  <!-- MODAL KONFIRMASI -->
+  <div class="modal-overlay" id="modalKonfirmasi" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <div class="modal-title" id="modalTitle">Konfirmasi Donasi</div>
+      <div class="modal-desc">Apakah Anda yakin ingin melanjutkan donasi ini?</div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn-cancel" id="btnTidak" onclick="tutupKonfirmasi()">Tidak</button>
+        <button type="button" class="modal-btn-confirm" id="btnYa" onclick="konfirmasiDonasi()">Ya, Donasi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">Baby Tree</div>
+    <p>Donasi &amp; Monitoring Bibit Pohon · Bersama menjaga bumi untuk generasi mendatang</p>
+    <div style="margin-top:16px; font-size:.78rem; color:rgba(255,255,255,.4)">
+      © <%= new Date().getFullYear() %> Baby Tree. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+  const hargaPohon = Number('<%= program.harga_pohon || 0 %>');
+
+  function hitungTotal() {
+    const jumlah = parseInt(document.getElementById('inputPohon').value) || 0;
+    const total  = jumlah * hargaPohon;
+    document.getElementById('totalDonasi').textContent =
+      'Rp ' + total.toLocaleString('id-ID');
+
+    // Reset active quick pick
+    document.querySelectorAll('.pick-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  function setPohon(jumlah, btn) {
+    document.getElementById('inputPohon').value = jumlah;
+    document.querySelectorAll('.pick-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    hitungTotal();
+  }
+
+  // Init hitung
+  hitungTotal();
+
+  /* ---- MODAL KONFIRMASI ---- */
+  function bukaKonfirmasi() {
+    const form = document.querySelector('form[action="/donasi"]');
+
+    // Validasi form HTML5 dulu
+    if (!form.reportValidity()) return;
+
+    document.getElementById('modalKonfirmasi').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function tutupKonfirmasi() {
+    document.getElementById('modalKonfirmasi').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function konfirmasiDonasi() {
+    tutupKonfirmasi();
+    document.querySelector('form[action="/donasi"]').submit();
+  }
+
+  // Tutup modal jika klik area luar
+  document.getElementById('modalKonfirmasi').addEventListener('click', function(e) {
+    if (e.target === this) tutupKonfirmasi();
+  });
+
+  // Tutup modal dengan Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') tutupKonfirmasi();
+  });
+</script>
+</body>
+</html>

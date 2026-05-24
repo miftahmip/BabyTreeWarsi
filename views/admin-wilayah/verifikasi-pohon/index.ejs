@@ -1,0 +1,548 @@
+<!-- views/admin-wilayah/verifikasi-pohon/index.ejs -->
+
+<% layout('layouts/admin-wilayah') %>
+
+<style>
+
+  /* ── Variabel warna (selaras dengan tema existing) ── */
+  :root {
+    --green-deep   : #1a4731;
+    --green-bright : #40916c;
+    --green-light  : #d8f3dc;
+    --brown-mid    : #7c6d5e;
+    --surface      : #ffffff;
+    --border       : rgba(116,198,157,.18);
+    --text-primary : #1a3225;
+    --text-muted   : #7c9585;
+  }
+
+  /* ── Header ── */
+  .vp-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .vp-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--green-deep);
+    margin: 0 0 4px;
+    line-height: 1.2;
+  }
+
+  .vp-subtitle {
+    font-size: .84rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* ── Stat cards ── */
+  .vp-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .vp-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .vp-stat-icon {
+    width: 42px; height: 42px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .vp-stat-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--green-deep);
+    line-height: 1;
+  }
+
+  .vp-stat-lbl {
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  /* ── Table card ── */
+  .vp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  /* ── Card top bar ── */
+  .vp-card-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .vp-card-bar-title {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--green-deep);
+    letter-spacing: .4px;
+  }
+
+  /* Search input */
+  .vp-search-wrap {
+    position: relative;
+  }
+
+  .vp-search-wrap svg {
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .vp-search {
+    padding: 7px 12px 7px 32px;
+    border-radius: 9px;
+    border: 1.5px solid var(--border);
+    background: rgba(216,243,220,.15);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .82rem;
+    color: var(--green-deep);
+    outline: none;
+    width: 200px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .vp-search::placeholder { color: #aac8b4; }
+
+  .vp-search:focus {
+    border-color: var(--green-bright);
+    box-shadow: 0 0 0 3px rgba(64,145,108,.1);
+    background: rgba(216,243,220,.3);
+  }
+
+  /* ── Table ── */
+  .vp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .875rem;
+    min-width: 700px;
+  }
+
+  .vp-table thead tr {
+    background: rgba(216,243,220,.25);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .vp-table th {
+    padding: 12px 16px;
+    text-align: center;
+    font-size: .67rem;
+    font-weight: 600;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: var(--brown-mid);
+    white-space: nowrap;
+  }
+
+  .vp-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid rgba(116,198,157,.07);
+    vertical-align: middle;
+    transition: background .13s;
+  }
+
+  .vp-table tbody tr:last-child td { border-bottom: none; }
+
+  .vp-table tbody tr:hover td {
+    background: rgba(240,250,244,.55);
+  }
+
+  /* No column */
+  .vp-no {
+    color: #b0bfb5;
+    font-size: .78rem;
+    width: 40px;
+  }
+
+  /* Program */
+  .vp-program-name {
+    font-weight: 600;
+    color: var(--green-deep);
+    font-size: .86rem;
+  }
+
+  /* Lokasi */
+  .vp-lokasi {
+    font-size: .8rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Angka pohon */
+  .vp-num {
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--green-deep);
+  }
+
+  /* Badge */
+  .vp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+  }
+
+  .vp-badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .vp-badge-success {
+    background: #e8f5e9;
+    color: #2d6a4f;
+  }
+
+  .vp-badge-success .vp-badge-dot { background: #40916c; }
+
+  .vp-badge-warning {
+    background: #fff8e1;
+    color: #a05c00;
+  }
+
+  .vp-badge-warning .vp-badge-dot {
+    background: #f59e0b;
+  }
+
+
+  /* Lokasi */
+    .vp-lokasi {
+    font-size: .8rem;
+    color: var(--text-muted);
+    max-width: 180px;
+    word-break: break-word;
+    line-height: 1.5;
+    }
+
+  /* Aksi button */
+  .vp-btn-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 9px;
+    background: rgba(216,243,220,.5);
+    color: var(--green-deep);
+    border: 1px solid rgba(116,198,157,.3);
+    text-decoration: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    transition: background .15s, transform .15s, box-shadow .15s;
+    white-space: nowrap;
+  }
+
+  .vp-btn-detail:hover {
+    background: rgba(116,198,157,.28);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(45,106,79,.12);
+  }
+
+  /* Empty state */
+  .vp-empty {
+    padding: 60px 20px;
+    text-align: center;
+  }
+
+  .vp-empty-icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: rgba(216,243,220,.4);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+
+  .vp-empty-text {
+    font-size: .9rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Footer paginasi info */
+  .vp-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    font-size: .75rem;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 600px) {
+    .vp-search { width: 150px; }
+    .vp-stats   { grid-template-columns: repeat(2, 1fr); }
+  }
+
+</style>
+
+
+<!-- ══════════════════════════════
+     HEADER
+══════════════════════════════ -->
+<div class="vp-header">
+  <div>
+    <h1 class="vp-title">Verifikasi Penanaman</h1>
+    <p class="vp-subtitle">Verifikasi data pohon hasil input petugas lapangan</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     STAT CARDS
+══════════════════════════════ -->
+<%
+  const totalPenanaman  = data.length;
+  const totalPohon      = data.reduce((s, d) => s + (d.total_pohon      || 0), 0);
+  const totalVerifikasi = data.reduce((s, d) => s + (d.total_verifikasi  || 0), 0);
+  const totalMenunggu   = data.reduce((s, d) => s + (d.total_menunggu    || 0), 0);
+%>
+
+<div class="vp-stats">
+
+  <!-- Total Penanaman -->
+  <div class="vp-stat-card">
+    <div class="vp-stat-icon" style="background:rgba(216,243,220,.5)">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#40916c" stroke-width="1.8">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="vp-stat-val"><%= totalPenanaman %></div>
+      <div class="vp-stat-lbl">Total Penanaman</div>
+    </div>
+  </div>
+
+  <!-- Total Pohon -->
+  <div class="vp-stat-card">
+    <div class="vp-stat-icon" style="background:rgba(186,230,253,.4)">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#0284c7" stroke-width="1.8">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    </div>
+    <div>
+      <div class="vp-stat-val"><%= totalPohon %></div>
+      <div class="vp-stat-lbl">Total Pohon</div>
+    </div>
+  </div>
+
+  <!-- Terverifikasi -->
+  <div class="vp-stat-card">
+    <div class="vp-stat-icon" style="background:rgba(187,247,208,.45)">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="1.8">
+        <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="vp-stat-val"><%= totalVerifikasi %></div>
+      <div class="vp-stat-lbl">Terverifikasi</div>
+    </div>
+  </div>
+
+  <!-- Menunggu -->
+  <div class="vp-stat-card">
+    <div class="vp-stat-icon" style="background:rgba(254,240,138,.45)">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#d97706" stroke-width="1.8">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 6v6l4 2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="vp-stat-val"><%= totalMenunggu %></div>
+      <div class="vp-stat-lbl">Menunggu Verifikasi</div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════
+     TABLE CARD
+══════════════════════════════ -->
+<div class="vp-card">
+
+  <!-- Top bar -->
+  <div class="vp-card-bar">
+    <span class="vp-card-bar-title">Daftar Penanaman</span>
+    <div class="vp-search-wrap">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="vp-search"
+        id="vpSearch"
+        placeholder="Cari program / lokasi..."
+        oninput="filterTable(this.value)"
+      />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div style="overflow-x:auto">
+    <table class="vp-table">
+      <thead>
+        <tr>
+          <th style="width:44px">No</th>
+          <th style="text-align:left">Program</th>
+          <th style="text-align:left">Lokasi</th>
+          <th>Total</th>
+          <th>Diverifikasi</th>
+          <th>Menunggu</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="vpTableBody">
+
+        <% if (data.length === 0) { %>
+        <tr id="vpEmptyRow">
+          <td colspan="7">
+            <div class="vp-empty">
+              <div class="vp-empty-icon">
+                <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#aac8b4" stroke-width="1.5">
+                  <rect x="5" y="2" width="14" height="20" rx="2"/>
+                  <path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="vp-empty-text">Belum ada data penanaman</div>
+            </div>
+          </td>
+        </tr>
+        <% } %>
+
+        <% data.forEach((item, index) => { %>
+        <tr class="vp-row"
+            data-search="<%= ((item.program?.judul_program || '') + ' ' + item.wilayah.nama_kelurahan + ' ' + item.wilayah.nama_kecamatan + ' ' + item.wilayah.nama_kota).toLowerCase() %>">
+
+          <td class="vp-no"><%= index + 1 %></td>
+
+          <td>
+            <div class="vp-program-name">
+              <%= item.program?.judul_program || '—' %>
+            </div>
+          </td>
+
+          <td>
+            <div class="vp-lokasi">
+              <%= item.wilayah.nama_kelurahan %>,
+              <%= item.wilayah.nama_kecamatan %>,
+              <%= item.wilayah.nama_kota %>
+            </div>
+          </td>
+
+          <td style="text-align:center">
+            <span class="vp-num"><%= item.total_pohon %></span>
+          </td>
+
+          <td style="text-align:center">
+            <span class="vp-badge vp-badge-success">
+              <span class="vp-badge-dot"></span>
+              <%= item.total_verifikasi %>
+            </span>
+          </td>
+
+          <td style="text-align:center">
+            <span class="vp-badge vp-badge-warning">
+              <span class="vp-badge-dot"></span>
+              <%= item.total_menunggu %>
+            </span>
+          </td>
+
+          <td style="text-align:center">
+            <a href="/admin-wilayah/verifikasi-pohon/<%= item.id_penanaman %>"
+               class="vp-btn-detail">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Detail
+            </a>
+          </td>
+
+        </tr>
+        <% }) %>
+
+        <!-- Baris tidak ditemukan saat search -->
+        <tr id="vpNoResult" style="display:none">
+          <td colspan="7">
+            <div class="vp-empty">
+              <div class="vp-empty-icon">
+                <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#aac8b4" stroke-width="1.5">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="vp-empty-text">Tidak ada hasil yang cocok</div>
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer info -->
+  <div class="vp-footer" id="vpFooter">
+    Menampilkan <strong id="vpCount"><%= data.length %></strong> dari <strong><%= data.length %></strong> penanaman
+  </div>
+
+</div>
+
+
+<script>
+  function filterTable(q) {
+    const rows     = document.querySelectorAll('.vp-row');
+    const noResult = document.getElementById('vpNoResult');
+    const countEl  = document.getElementById('vpCount');
+    const keyword  = q.toLowerCase().trim();
+
+    let visible = 0;
+
+    rows.forEach(function(row) {
+      const match = row.dataset.search.includes(keyword);
+      row.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    noResult.style.display = (visible === 0 && rows.length > 0) ? '' : 'none';
+    countEl.textContent    = visible;
+  }
+</script>

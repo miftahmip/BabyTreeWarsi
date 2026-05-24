@@ -1,0 +1,136 @@
+<% layout('layouts/admin-wilayah') %>
+
+<style>
+  :root {
+    --green-deep   : #1a4731;
+    --green-bright : #40916c;
+    --green-light  : #d8f3dc;
+    --brown-mid    : #7c6d5e;
+    --surface      : #ffffff;
+    --border       : rgba(116,198,157,.18);
+    --text-muted   : #7c9585;
+  }
+
+  .rp-header { margin-bottom: 28px; }
+
+  .rp-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; font-weight: 700;
+    color: var(--green-deep); margin: 0 0 4px;
+  }
+
+  .rp-subtitle { font-size: .84rem; color: var(--brown-mid); margin: 0; }
+
+  /* Grid kartu program */
+  .rp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .rp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    transition: box-shadow .18s, transform .18s, border-color .18s;
+  }
+
+  .rp-card:hover {
+    box-shadow: 0 8px 28px rgba(26,71,49,.12);
+    transform: translateY(-2px);
+    border-color: rgba(116,198,157,.45);
+  }
+
+  .rp-card-icon {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    background: rgba(216,243,220,.5);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .rp-card-name {
+    font-size: .95rem; font-weight: 700;
+    color: var(--green-deep); line-height: 1.3;
+  }
+
+  .rp-card-id {
+    font-size: .72rem; color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+  }
+
+  .rp-card-arrow {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  .rp-card-cta {
+    font-size: .75rem; font-weight: 600;
+    color: var(--green-bright);
+  }
+
+  /* Empty */
+  .rp-empty {
+    text-align: center; padding: 60px 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+
+  .rp-empty-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: rgba(216,243,220,.4);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+  }
+
+  .rp-empty-text { font-size: .88rem; color: var(--text-muted); font-weight: 500; }
+</style>
+
+
+<div class="rp-header">
+  <h1 class="rp-title">Rekap Pembayaran Mitra</h1>
+  <p class="rp-subtitle">Pilih program donasi untuk melihat rekap pembayaran</p>
+</div>
+
+<% if (programs.length === 0) { %>
+  <div class="rp-empty">
+    <div class="rp-empty-icon">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#aac8b4" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <path d="M9 9h6M9 13h4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="rp-empty-text">Belum ada program donasi</div>
+  </div>
+<% } else { %>
+  <div class="rp-grid">
+    <% programs.forEach((prog, i) => { %>
+      <a href="/admin-wilayah/rekap-pembayaran/program/<%= prog.id_program %>"
+         class="rp-card">
+        <div style="flex:1">
+        <div class="rp-card-icon">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#40916c" stroke-width="1.8">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/>
+          </svg>
+        </div>
+          <div class="rp-card-name" style="margin-top:10px">
+            <%= prog.judul_program || prog.nama_program || `Program #${i+1}` %>
+          </div>
+        </div>
+        <div class="rp-card-arrow">
+          <span class="rp-card-cta">Lihat Rekap →</span>
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#aac8b4" stroke-width="2">
+            <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+<% } %>
