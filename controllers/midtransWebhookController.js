@@ -1,156 +1,244 @@
-const { Payment, Donasi, ProgramDonasi } = require('../models');
+const {Payment, Donasi, ProgramDonasi} = require('../models');
 
-exports.handleNotification = async (req, res) => {
-  try {
-    const notification = req.body;
+class MidtransWebhookController {
 
-    console.log('=== MIDTRANS NOTIFICATION ===');
-    console.log(notification);
+  static async handleNotification(req, res) {
 
-    const {
-      order_id,
-      transaction_status,
-      payment_type,
-      transaction_id,
-      settlement_time,
-      transaction_time,
-      expiry_time,
-      va_numbers,
-      store
-    } = notification;
+    try {
+      const notification = req.body;
 
-    // 🔹 Mapping status
-    let status = 'pending';
+      console.log('=== MIDTRANS NOTIFICATION ===');
+      console.log(notification);
 
-    switch (transaction_status) {
-      case 'settlement':
-        status = 'settlement';
-        break;
-      case 'pending':
-        status = 'pending';
-        break;
-      case 'deny':
-        status = 'failed';
-        break;
-      case 'expire':
-        status = 'expired';
-        break;
-      case 'cancel':
-        status = 'cancelled';
-        break;
-    }
+      const {
+        order_id,
+        transaction_status,
+        payment_type,
+        transaction_id,
+        settlement_time,
+        transaction_time,
+        expiry_time,
+        va_numbers,
+        store
+      } = notification;
 
-    // 🔹 Mapping payment channel & VA number
-    let payment_channel = null;
-    let va_number = null;
 
-    if (payment_type === 'bank_transfer') {
-      if (va_numbers && va_numbers.length > 0) {
-        payment_channel = va_numbers[0].bank;      // bca, bni, dll
-        va_number = va_numbers[0].va_number;
+      // MAPPING STATUS
+      let status = 'pending';
+
+      switch (transaction_status) {
+        case 'settlement':
+          status =
+            'settlement';
+          break;
+        case 'pending':
+          status =
+            'pending';
+          break;
+        case 'deny':
+          status =
+            'failed';
+          break;
+        case 'expire':
+          status =
+            'expired';
+          break;
+        case 'cancel':
+          status =
+            'cancelled';
+          break;
       }
-    } else if (payment_type === 'cstore') {
-      payment_channel = store; // indomaret / alfamart
-    } else {
-      payment_channel = payment_type; // qris, gopay, dll
-    }
 
-    // Update database
-    const [updated] = await Payment.update({
-      status,
-      payment_type,
-      payment_channel,
-      transaction_id,
-      transaction_time: transaction_time
-        ? new Date(transaction_time)
-        : null,
+      // MAPPING PAYMENT CHANNEL
+      let payment_channel = null;
+      let va_number = null;
 
-      settlement_time: settlement_time
-        ? new Date(settlement_time)
-        : null,
+      if (payment_type === 'bank_transfer') {
+        if (va_numbers && va_numbers.length > 0) {
+          payment_channel = va_numbers[0].bank;
+          va_number = va_numbers[0].va_number;
+        }
+      } else if (payment_type === 'cstore') {
+        payment_channel = store;
+      } else {
+        payment_channel = payment_type;
+      }
 
-      expiry_time: expiry_time
-        ? new Date(expiry_time)
-        : null,
+      // ==========================
+      // UPDATE PAYMENT
+      // ==========================
 
-      va_number,
-      raw_response: notification
+      const [updated] =
+        await Payment.update(
 
-    }, {
-      where: { order_id }
-    });
+          {
 
+            status,
 
-    // 🔥 UPDATE POHON TERKUMPUL
-    if (status === 'settlement') {
+            payment_type,
 
-      // ambil payment terbaru
-      const payment = await Payment.findOne({
-        where: { order_id }
-      });
+            payment_channel,
 
-      if (payment) {
+            transaction_id,
 
-        // ambil data donasi
-        const donasi = await Donasi.findByPk(
-          payment.id_donasi
-        );
+            transaction_time:
+              transaction_time
+                ? new Date(
+                    transaction_time
+                  )
+                : null,
 
-        if (donasi) {
+            settlement_time:
+              settlement_time
+                ? new Date(
+                    settlement_time
+                  )
+                : null,
 
-          // ambil semua donasi settlement
-          const semuaDonasi = await Donasi.findAll({
+            expiry_time:
+              expiry_time
+                ? new Date(
+                    expiry_time
+                  )
+                : null,
+
+            va_number,
+
+            raw_response:
+              notification
+
+          },
+
+          {
+
             where: {
-              id_program: donasi.id_program
-            },
+              order_id
+            }
 
-            include: [
-              {
-                model: Payment,
-                as: 'payments',
-
-                where: {
-                  status: 'settlement'
-                }
-              }
-            ]
-          });
-
-          // hitung total pohon
-          let totalPohon = 0;
-
-          for (const item of semuaDonasi) {
-            totalPohon += item.jumlah_pohon;
           }
 
-          // update program
-          await ProgramDonasi.update({
-            pohon_terkumpul: totalPohon
-          }, {
+        );
+
+      // ==========================
+      // UPDATE POHON TERKUMPUL
+      // ==========================
+
+      if (
+        status ===
+        'settlement'
+      ) {
+
+        const payment =
+          await Payment.findOne({
+
             where: {
-              id_program: donasi.id_program
+              order_id
             }
+
           });
 
-          console.log(
-            'POHON TERKUMPUL UPDATED:',
-            totalPohon
-          );
+        if (payment) {
+
+          const donasi =
+            await Donasi.findByPk(
+              payment.id_donasi
+            );
+
+          if (donasi) {
+
+            const semuaDonasi =
+              await Donasi.findAll({
+
+                where: {
+
+                  id_program:
+                    donasi.id_program
+
+                },
+
+                include: [
+
+                  {
+
+                    model: Payment,
+
+                    as: 'payments',
+
+                    where: {
+
+                      status:
+                        'settlement'
+
+                    }
+
+                  }
+
+                ]
+
+              });
+
+            let totalPohon =
+              0;
+
+            for (
+              const item of semuaDonasi
+            ) {
+
+              totalPohon +=
+                item.jumlah_pohon;
+
+            }
+
+            await ProgramDonasi.update(
+
+              {
+
+                pohon_terkumpul:
+                  totalPohon
+
+              },
+
+              {
+
+                where: {
+
+                  id_program:
+                    donasi.id_program
+
+                }
+
+              }
+
+            );
+
+            console.log(
+
+              'POHON TERKUMPUL UPDATED:',
+
+              totalPohon
+
+            );
+
+          }
+
         }
+
       }
+
+      console.log('=== UPDATE RESULT ===');
+      console.log('Order ID:', order_id);
+      console.log('Status:', status);
+      console.log('Payment Type:', payment_type);
+      console.log('Payment Channel:', payment_channel);
+      console.log('Updated Rows:', updated);
+
+      return res.status(200).json({message: 'OK'});
+
+    } catch (error) {
+      console.error('WEBHOOK ERROR:', error);
+      return res.status(500).json({message: 'Error webhook'});
     }
-
-    console.log('=== UPDATE RESULT ===');
-    console.log('Order ID:', order_id);
-    console.log('Status:', status);
-    console.log('Payment Type:', payment_type);
-    console.log('Payment Channel:', payment_channel);
-    console.log('Updated Rows:', updated);
-
-    res.status(200).json({ message: 'OK' });
-
-  } catch (error) {
-    console.error('WEBHOOK ERROR:', error);
-    res.status(500).json({ message: 'Error webhook' });
   }
-};
+}
+
+module.exports = MidtransWebhookController;

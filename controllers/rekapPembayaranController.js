@@ -34,6 +34,7 @@ class RekapPembayaranController {
       res.render(
         'admin-wilayah/rekap/listProgram', { 
           programs,
+          activePage: 'rekap-pembayaran',
           user: req.user
          }
       );
@@ -78,7 +79,8 @@ class RekapPembayaranController {
       res.render(
         'admin-wilayah/rekap/listPenanaman',{ 
           penanaman, 
-          user: req.user 
+          user: req.user,
+          activePage: 'rekap-pembayaran'
         }
       );
 
@@ -250,7 +252,8 @@ class RekapPembayaranController {
               mitraMap
             ),
           hargaMap,
-          user: req.user
+          user: req.user,
+          activePage: 'rekap-pembayaran'
         }
       );
 

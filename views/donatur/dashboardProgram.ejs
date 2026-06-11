@@ -1,0 +1,815 @@
+<% layout('layouts/donatur') %>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --green-deep:   #1a4731;
+    --green-mid:    #2d6a4f;
+    --green-bright: #40916c;
+    --green-light:  #74c69d;
+    --green-pale:   #d8f3dc;
+    --green-ghost:  #f0faf4;
+    --brown-mid:    #7d5a3c;
+    --brown-light:  #c9a87c;
+    --cream:        #fdf8f0;
+  }
+
+  .db-page {
+    padding: 28px 32px 48px;
+    background: var(--cream);
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    max-width: 960px;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* ── BACK ── */
+  .db-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brown-mid);
+    text-decoration: none;
+    margin-bottom: 22px;
+    transition: color .15s;
+  }
+  .db-back:hover { color: var(--green-deep); }
+
+  /* ── HERO ── */
+  .db-hero {
+    background: linear-gradient(135deg, var(--green-mid) 0%, var(--green-deep) 100%);
+    border-radius: 18px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .db-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: rgba(116,198,157,.12);
+    pointer-events: none;
+  }
+
+  .db-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: 20%;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    pointer-events: none;
+  }
+
+  .db-hero-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green-light);
+    margin-bottom: 8px;
+  }
+
+  .db-hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    color: white;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    max-width: 560px;
+  }
+
+  .db-hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .db-hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(255,255,255,.65);
+  }
+
+  .db-hero-meta-item svg { color: var(--green-light); }
+
+  /* ── STATS ROW ── */
+  .db-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .db-stat-card {
+    background: white;
+    border: 1px solid #dceee3;
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: transform .2s, box-shadow .2s;
+  }
+
+  .db-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26,71,49,.08);
+  }
+
+  .db-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #9abfad;
+    margin-bottom: 8px;
+  }
+
+  .db-stat-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--green-deep);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .db-stat-sub {
+    font-size: 11px;
+    color: #b8d4c4;
+    font-weight: 400;
+  }
+
+  .db-stat-bar {
+    height: 3px;
+    background: var(--green-ghost);
+    border-radius: 99px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .db-stat-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s ease;
+  }
+
+  /* ── 2 COL LAYOUT ── */
+  .db-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* ── CARD BASE ── */
+  .db-card {
+    background: white;
+    border: 1px solid #dceee3;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .db-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--green-ghost);
+  }
+
+  .db-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-deep);
+  }
+
+  .db-card-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green-bright);
+    background: var(--green-ghost);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--green-pale);
+  }
+
+  /* ── SURVIVAL RING ── */
+  .db-survival-wrap {
+    padding: 20px 18px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .db-ring-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .db-ring {
+    transform: rotate(-90deg);
+  }
+
+  .db-ring-bg {
+    fill: none;
+    stroke: var(--green-ghost);
+    stroke-width: 8;
+  }
+
+  .db-ring-fill {
+    fill: none;
+    stroke: var(--green-bright);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1);
+  }
+
+  .db-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .db-ring-pct {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    color: var(--green-deep);
+    line-height: 1;
+  }
+
+  .db-ring-pct-label {
+    font-size: 9px;
+    color: #9abfad;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-top: 2px;
+  }
+
+  .db-survival-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .db-survival-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .db-survival-row-label {
+    font-size: 12px;
+    color: #9abfad;
+    flex: 1;
+  }
+
+  .db-survival-row-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-deep);
+  }
+
+  /* ── PROGRESS MONITORING ── */
+  .db-progress-body {
+    padding: 14px 18px;
+  }
+
+  .db-progress-item {
+    margin-bottom: 14px;
+  }
+
+  .db-progress-item:last-child { margin-bottom: 0; }
+
+  .db-progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .db-progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green-mid);
+  }
+
+  .db-progress-count {
+    font-size: 11px;
+    color: #9abfad;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .db-progress-track {
+    height: 7px;
+    background: var(--green-ghost);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .db-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s cubic-bezier(.22,1,.36,1);
+    width: 0;
+  }
+
+  /* ── DOKUMENTASI ── */
+  .db-foto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 110px));
+    gap: 8px;
+    padding: 14px 18px;
+  }
+
+  .db-foto-item {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    cursor: pointer;
+  }
+
+  .db-foto-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .3s;
+  }
+
+  .db-foto-item:hover img { transform: scale(1.06); }
+
+  .db-foto-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(26,71,49,.7), transparent);
+    display: flex;
+    align-items: flex-end;
+    padding: 8px;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .db-foto-item:hover .db-foto-overlay { opacity: 1; }
+
+  .db-foto-tahap {
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    background: rgba(0,0,0,.3);
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  .db-foto-empty {
+    padding: 32px 18px;
+    text-align: center;
+    color: #b8d4c4;
+    font-size: 13px;
+  }
+
+  /* ── STATUS POHON BAR ── */
+  .db-status-body {
+    padding: 16px 18px;
+  }
+
+  .db-status-bar-wrap {
+    height: 10px;
+    background: var(--green-ghost);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    display: flex;
+  }
+
+  .db-status-seg {
+    height: 100%;
+    transition: width 1s cubic-bezier(.22,1,.36,1);
+    width: 0;
+  }
+
+  .db-status-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .db-status-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #6b8c7a;
+  }
+
+  .db-status-legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .db-status-legend-val {
+    font-weight: 700;
+    color: var(--green-deep);
+    margin-left: 2px;
+  }
+
+  /* ── TIMELINE ── */
+  .db-timeline {
+    padding: 14px 18px;
+  }
+
+  .db-timeline-item {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+    position: relative;
+  }
+
+  .db-timeline-item:last-child { padding-bottom: 0; }
+
+  .db-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 26px;
+    bottom: 0;
+    width: 1px;
+    background: var(--green-pale);
+  }
+
+  .db-timeline-item:last-child::before { display: none; }
+
+  .db-timeline-dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--green-ghost);
+    border: 2px solid var(--green-pale);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--green-mid);
+    position: relative;
+    z-index: 1;
+  }
+
+  .db-timeline-dot.done {
+    background: var(--green-mid);
+    border-color: var(--green-mid);
+    color: white;
+  }
+
+  .db-timeline-content {
+    padding-top: 3px;
+    flex: 1;
+  }
+
+  .db-timeline-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-deep);
+    margin-bottom: 2px;
+  }
+
+  .db-timeline-sub {
+    font-size: 11px;
+    color: #9abfad;
+  }
+
+  .db-timeline-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green-bright);
+    font-family: 'DM Mono', monospace;
+    margin-top: 3px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 720px) {
+    .db-page { padding: 16px 16px 40px; }
+    .db-hero { padding: 22px 20px; }
+    .db-hero-title { font-size: 1.4rem; }
+    .db-stats { grid-template-columns: 1fr 1fr; }
+    .db-cols { grid-template-columns: 1fr; }
+    .db-stat-value { font-size: 1.6rem; }
+  }
+
+  @media (max-width: 420px) {
+    .db-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .db-foto-grid { grid-template-columns: repeat(2, 1fr); }
+    .db-stat-card { padding: 12px 14px; }
+  }
+</style>
+
+<div class="db-page">
+
+  <!-- BACK -->
+  <a href="/donatur/donasi-saya" class="db-back">
+    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Kembali ke Donasi Saya
+  </a>
+
+  <!-- HERO -->
+  <div class="db-hero">
+    <div class="db-hero-eyebrow">Dashboard Program</div>
+    <div class="db-hero-title"><%= program.judul_program %></div>
+    <div class="db-hero-meta">
+      <div class="db-hero-meta-item">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg>
+        <%= program.createdAt ? new Date(program.createdAt).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' }) : '—' %>
+      </div>
+      <div class="db-hero-meta-item">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M12 22V12" stroke-linecap="round"/>
+          <path d="M12 12C12 12 8 9 8 5C8 2.5 10 1 12 1C14 1 16 2.5 16 5C16 9 12 12 12 12Z"/>
+        </svg>
+        <%= totalPohon.toLocaleString('id-ID') %> pohon ditanam
+      </div>
+      <div class="db-hero-meta-item">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Program aktif
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="db-stats">
+
+    <div class="db-stat-card">
+      <div class="db-stat-label">Total Pohon</div>
+      <div class="db-stat-value"><%= totalPohon.toLocaleString('id-ID') %></div>
+      <div class="db-stat-sub">pohon terdaftar</div>
+      <div class="db-stat-bar">
+        <div class="db-stat-bar-fill" style="width:100%; background: var(--green-light);"></div>
+      </div>
+    </div>
+
+    <div class="db-stat-card">
+      <div class="db-stat-label">Pohon Hidup</div>
+      <div class="db-stat-value" style="color: var(--green-bright)"><%= totalHidup.toLocaleString('id-ID') %></div>
+      <div class="db-stat-sub">dari monitoring terakhir</div>
+      <div class="db-stat-bar">
+        <div class="db-stat-bar-fill" data-width="<%= totalPohon > 0 ? (totalHidup/totalPohon*100).toFixed(1) : 0 %>" data-color="var(--green-bright)"></div>
+      </div>
+    </div>
+
+    <div class="db-stat-card">
+      <div class="db-stat-label">Pohon Mati</div>
+      <div class="db-stat-value" style="color: #e57373"><%= totalMati.toLocaleString('id-ID') %></div>
+      <div class="db-stat-sub">terdeteksi mati</div>
+      <div class="db-stat-bar">
+        <div class="db-stat-bar-fill" data-width="<%= totalPohon > 0 ? (totalMati/totalPohon*100).toFixed(1) : 0 %>" data-color="#e57373"></div>
+      </div>
+    </div>
+
+    <div class="db-stat-card">
+      <div class="db-stat-label">Belum Monitoring</div>
+      <div class="db-stat-value" style="color: var(--brown-light)"><%= totalBelumMonitoring.toLocaleString('id-ID') %></div>
+      <div class="db-stat-sub">belum ada data</div>
+      <div class="db-stat-bar">
+        <div class="db-stat-bar-fill" data-width="<%= totalPohon > 0 ? (totalBelumMonitoring/totalPohon*100).toFixed(1) : 0 %>" data-color="var(--brown-light)"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 1: SURVIVAL + PROGRESS -->
+  <div class="db-cols">
+
+    <!-- SURVIVAL RATE -->
+    <div class="db-card">
+      <div class="db-card-head">
+        <span class="db-card-title">Survival Rate</span>
+        <span class="db-card-badge"><%= survivalRate %>%</span>
+      </div>
+      <div class="db-survival-wrap">
+        <div class="db-ring-wrap">
+          <svg class="db-ring" width="100" height="100" viewBox="0 0 100 100">
+            <circle class="db-ring-bg" cx="50" cy="50" r="45"/>
+            <circle class="db-ring-fill" id="survivalRing" cx="50" cy="50" r="45"/>
+          </svg>
+          <div class="db-ring-label">
+            <div class="db-ring-pct"><%= survivalRate %><span style="font-size:.7rem">%</span></div>
+            <div class="db-ring-pct-label">hidup</div>
+          </div>
+        </div>
+        <div class="db-survival-info">
+          <div class="db-survival-row">
+            <div class="db-survival-dot" style="background: var(--green-bright)"></div>
+            <div class="db-survival-row-label">Hidup</div>
+            <div class="db-survival-row-val"><%= totalHidup %></div>
+          </div>
+          <div class="db-survival-row">
+            <div class="db-survival-dot" style="background: #e57373"></div>
+            <div class="db-survival-row-label">Mati</div>
+            <div class="db-survival-row-val"><%= totalMati %></div>
+          </div>
+          <div class="db-survival-row">
+            <div class="db-survival-dot" style="background: var(--brown-light)"></div>
+            <div class="db-survival-row-label">Belum data</div>
+            <div class="db-survival-row-val"><%= totalBelumMonitoring %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS MONITORING -->
+    <div class="db-card">
+      <div class="db-card-head">
+        <span class="db-card-title">Progress Monitoring</span>
+        <span class="db-card-badge"><%= totalPohon %> pohon</span>
+      </div>
+      <div class="db-progress-body">
+        <% progressMonitoring.forEach((item, i) => { %>
+          <%
+            const pct = totalPohon > 0 ? ((item.count / totalPohon) * 100).toFixed(1) : 0;
+            const colors = ['var(--green-light)', 'var(--green-bright)', 'var(--green-mid)'];
+          %>
+          <div class="db-progress-item">
+            <div class="db-progress-row">
+              <span class="db-progress-label">Monitoring <%= item.tahap %></span>
+              <span class="db-progress-count"><%= item.count %>/<%= totalPohon %> (<%= pct %>%)</span>
+            </div>
+            <div class="db-progress-track">
+              <div class="db-progress-fill"
+                   data-width="<%= pct %>"
+                   data-color="<%= colors[i] %>"></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: STATUS BAR + TIMELINE -->
+  <div class="db-cols">
+
+    <!-- STATUS DISTRIBUSI -->
+    <div class="db-card">
+      <div class="db-card-head">
+        <span class="db-card-title">Distribusi Status</span>
+      </div>
+      <div class="db-status-body">
+        <div class="db-status-bar-wrap">
+          <div class="db-status-seg" data-width="<%= totalPohon > 0 ? (totalHidup/totalPohon*100).toFixed(1) : 0 %>"
+               style="background: var(--green-bright); border-radius: 99px 0 0 99px;"></div>
+          <div class="db-status-seg" data-width="<%= totalPohon > 0 ? (totalMati/totalPohon*100).toFixed(1) : 0 %>"
+               style="background: #e57373;"></div>
+          <div class="db-status-seg" data-width="<%= totalPohon > 0 ? (totalBelumMonitoring/totalPohon*100).toFixed(1) : 0 %>"
+               style="background: var(--green-ghost); border-radius: 0 99px 99px 0;"></div>
+        </div>
+        <div class="db-status-legend">
+          <div class="db-status-legend-item">
+            <div class="db-status-legend-dot" style="background: var(--green-bright)"></div>
+            Hidup <span class="db-status-legend-val"><%= totalPohon > 0 ? (totalHidup/totalPohon*100).toFixed(1) : 0 %>%</span>
+          </div>
+          <div class="db-status-legend-item">
+            <div class="db-status-legend-dot" style="background: #e57373"></div>
+            Mati <span class="db-status-legend-val"><%= totalPohon > 0 ? (totalMati/totalPohon*100).toFixed(1) : 0 %>%</span>
+          </div>
+          <div class="db-status-legend-item">
+            <div class="db-status-legend-dot" style="background: #d0e4d8"></div>
+            Belum data <span class="db-status-legend-val"><%= totalPohon > 0 ? (totalBelumMonitoring/totalPohon*100).toFixed(1) : 0 %>%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE MONITORING -->
+    <div class="db-card">
+      <div class="db-card-head">
+        <span class="db-card-title">Tahapan Monitoring</span>
+      </div>
+      <div class="db-timeline">
+        <% progressMonitoring.forEach(item => { %>
+          <div class="db-timeline-item">
+            <div class="db-timeline-dot <%= item.count > 0 ? 'done' : '' %>">
+              <% if (item.count > 0) { %>
+                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              <% } else { %>
+                <%= item.tahap %>
+              <% } %>
+            </div>
+            <div class="db-timeline-content">
+              <div class="db-timeline-title">Monitoring Tahap <%= item.tahap %></div>
+              <div class="db-timeline-sub">
+                <% if (item.count === 0) { %>
+                  Belum ada data monitoring
+                <% } else if (item.count < totalPohon) { %>
+                  Sedang berlangsung
+                <% } else { %>
+                  Semua pohon sudah dimonitor
+                <% } %>
+              </div>
+              <% if (item.count > 0) { %>
+                <div class="db-timeline-count"><%= item.count %> dari <%= totalPohon %> pohon</div>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DOKUMENTASI -->
+  <div class="db-card">
+    <div class="db-card-head">
+      <span class="db-card-title">Dokumentasi Terbaru</span>
+      <span class="db-card-badge"><%= dokumentasi.length %> foto</span>
+    </div>
+    <% if (dokumentasi.length > 0) { %>
+      <div class="db-foto-grid">
+        <% dokumentasi.forEach(item => { %>
+          <% if (item.foto && item.foto.length > 0) { %>
+            <div class="db-foto-item">
+              <img src="/uploads/monitoring/<%= item.foto[0] %>" alt="Foto monitoring tahap <%= item.tahap %>">
+              <div class="db-foto-overlay">
+                <span class="db-foto-tahap">
+                  Tahap <%= item.tahap %> ·
+                  <%= item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day:'2-digit', month:'short' }) : '' %>
+                </span>
+              </div>
+            </div>
+          <% } %>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="db-foto-empty">
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" style="margin: 0 auto 8px; display:block; color: #c0d9ca">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        Belum ada dokumentasi monitoring
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<script>
+  // Animasi ring survival rate
+  window.addEventListener('load', function () {
+    const pct    = parseFloat('<%= survivalRate %>') || 0;
+    const ring   = document.getElementById('survivalRing');
+    const circum = 2 * Math.PI * 45;
+    const offset = circum - (pct / 100) * circum;
+
+    setTimeout(() => {
+      ring.style.strokeDasharray  = circum;
+      ring.style.strokeDashoffset = offset;
+    }, 200);
+
+    // Animasi progress bar
+    document.querySelectorAll('.db-progress-fill').forEach(el => {
+      setTimeout(() => {
+        el.style.width = (el.dataset.width || 0) + '%';
+        el.style.background = el.dataset.color || 'var(--green-light)';
+      }, 300);
+    });
+
+    // Animasi status bar
+    document.querySelectorAll('.db-status-seg').forEach(el => {
+      setTimeout(() => {
+        el.style.width = (el.dataset.width || 0) + '%';
+      }, 300);
+    });
+
+    // Set width dan color dari data attribute
+    document.querySelectorAll('.db-stat-bar-fill').forEach(el => {
+      el.style.width    = (el.dataset.width || 0) + '%';
+      el.style.background = el.dataset.color || 'var(--green-light)';
+    });
+  });
+</script>

@@ -350,6 +350,9 @@
 
     <h1 class="card-title">Selamat Datang</h1>
     <p class="card-subtitle">Masuk untuk melanjutkan perjalanan hijau Anda</p>
+    <% if (typeof returnUrl !== 'undefined' && returnUrl) { %>
+      <p class="card-subtitle" style="margin-top:4px; font-size:.88rem; color:#477356;">Masuk untuk melanjutkan ke halaman pembayaran donasi.</p>
+    <% } %>
 
     <!-- Error flash -->
     <% if (typeof error !== 'undefined' && error) { %>
@@ -370,6 +373,7 @@
 
     <!-- Form -->
     <form action="/login" method="POST" novalidate>
+      <input type="hidden" name="returnUrl" value="<%= typeof returnUrl !== 'undefined' ? returnUrl : '' %>" />
 
       <!-- Email -->
       <div>
@@ -434,7 +438,10 @@
 
     <!-- Register -->
     <p class="register-row">
-      Belum punya akun? <a href="/register">Daftar sekarang</a>
+      Belum punya akun? 
+      <a href="/register<% if (typeof returnUrl !== 'undefined' && returnUrl) { %>?returnUrl=<%= encodeURIComponent(returnUrl) %>&email=<%= encodeURIComponent(formEmail || '') %><% } %>">
+        Daftar sekarang
+      </a>
     </p>
 
   </div>

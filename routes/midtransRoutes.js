@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const midtransWebhookController = require('../controllers/midtransWebhookController');
+const MidtransWebhookController = require('../controllers/midtransWebhookController');
 
-router.post('/midtrans/notification', midtransWebhookController.handleNotification);
+router.post(
+  '/midtrans/notification',
+  MidtransWebhookController.handleNotification
+);
 
 module.exports = router;

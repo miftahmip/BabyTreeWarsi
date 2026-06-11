@@ -403,15 +403,15 @@
   <!-- STAT STRIP -->
   <div class="stat-strip">
     <div class="stat-item">
-      <div class="stat-num"><%= typeof totalPohon !== 'undefined' ? totalPohon.toLocaleString('id-ID') : '—' %></div>
+      <div class="stat-num"><%= totalPohon.toLocaleString('id-ID') %></div>
       <div class="stat-label">Pohon Tertanam</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num"><%= typeof totalPenerima !== 'undefined' ? totalPenerima.toLocaleString('id-ID') : '—' %></div>
+      <div class="stat-num"><%= totalPenerimaManfaat.toLocaleString('id-ID') %></div>
       <div class="stat-label">Penerima Manfaat</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num"><%= typeof totalWilayah !== 'undefined' ? totalWilayah : '—' %></div>
+      <div class="stat-num"><%= totalWilayah.toLocaleString('id-ID') %></div>
       <div class="stat-label">Wilayah Penanaman</div>
     </div>
   </div>

@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
 const ejsMate = require('ejs-mate');
 
 const app = express();
@@ -11,6 +12,16 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'babytree_secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000
+    }
+  })
+);
 
 // ================= VIEW ENGINE =================
 app.engine('ejs', ejsMate);
@@ -41,6 +52,14 @@ const verifikasiPohonRoutes = require('./routes/verifikasiPohonRoutes');
 const monitoringRoutes = require('./routes/monitoringRoutes');
 const hargaPenanamanRoutes = require('./routes/hargaPenanamanRoutes');
 const rekapPembayaranRoutes = require('./routes/rekapPembayaranRoutes');
+const donaturRoutes = require('./routes/donaturRoutes');
+const dashboardPetugasRoutes = require('./routes/dashboardPetugasRoutes');
+const corporateRoutes = require('./routes/corporate');
+const dashboardWilayahRoutes = require('./routes/dashboardWilayahRoutes');
+const adminPusatDashboardRoutes = require('./routes/adminPusatDashboardRoutes');
+const pimpinanDashboardRoutes = require('./routes/pimpinanDashboardRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const forgotPasswordRoutes = require('./routes/forgotPasswordRoutes');
 
 // public (landing page)
 app.use('/', landingRoutes);
@@ -60,6 +79,15 @@ app.use('/', verifikasiPohonRoutes);
 app.use('/', monitoringRoutes);
 app.use('/', hargaPenanamanRoutes);
 app.use('/', rekapPembayaranRoutes);
+app.use('/', donaturRoutes);
+app.use('/', dashboardPetugasRoutes);
+app.use('/', corporateRoutes);
+app.use('/', dashboardWilayahRoutes);
+app.use('/', adminPusatDashboardRoutes);
+app.use('/', pimpinanDashboardRoutes);
+app.use('/', profileRoutes);
+app.use('/', forgotPasswordRoutes);
+
 
 // ================= ERROR HANDLER =================
 

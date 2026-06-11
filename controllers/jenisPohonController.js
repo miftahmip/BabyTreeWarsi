@@ -16,6 +16,7 @@ class JenisPohonController {
 
       res.render('admin-wilayah/jenis-pohon', {
         title: 'Data Jenis Pohon',
+        activePage: 'jenis-pohon',
         data,
         user: req.user
       });

@@ -2,8 +2,9 @@
 
 <style>
   .badge-status {
-    display: inline-block; padding: 4px 10px;
-    border-radius: 20px; font-size: .7rem; font-weight: 600; letter-spacing: .3px;
+    display: inline-block; padding: 3px 8px;
+    border-radius: 20px; font-size: .68rem; font-weight: 600; letter-spacing: .3px;
+    white-space: nowrap;
   }
   .badge-menunggu  { background: #fff8e1; color: #f57f17; }
   .badge-disetujui { background: #e8f5e9; color: #2d6a4f; }
@@ -319,9 +320,9 @@
   <div class="filter-tabs">
     <%
       const cSemua    = data.length;
-      const cMenunggu = data.filter(d => d.status_verifikasi === 'menunggu').length;
-      const cDisetujui = data.filter(d => d.status_verifikasi === 'disetujui').length;
-      const cRevisi   = data.filter(d => d.status_verifikasi === 'revisi').length;
+      const cMenunggu = data.filter(d => d.overallStatus === 'menunggu').length;
+      const cDisetujui = data.filter(d => d.overallStatus === 'disetujui').length;
+      const cRevisi   = data.filter(d => d.overallStatus === 'revisi').length;
     %>
     <button class="filter-tab active" data-filter="semua" onclick="setFilter('semua', this)">
       Semua <span class="filter-count"><%= cSemua %></span>
@@ -346,7 +347,7 @@
           <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Jenis Pohon</th>
           <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Mitra</th>
           <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Tanggal Tanam</th>
-          <th style="padding:13px 16px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Status</th>
+          <th style="padding:13px 16px; width:120px; text-align:left; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Status</th>
           <th style="padding:13px 16px; text-align:center; font-size:.68rem; font-weight:600; letter-spacing:.9px; text-transform:uppercase; color:var(--brown-mid)">Aksi</th>
         </tr>
       </thead>
@@ -362,7 +363,7 @@
 
         <% data.forEach((item, index) => { %>
         <tr class="data-row"
-            data-status="<%= item.status_verifikasi %>"
+            data-status="<%= item.overallStatus %>"
             style="border-bottom:1px solid rgba(116,198,157,.08); transition:background .15s"
             onmouseover="this.style.background='rgba(240,250,244,.6)'"
             onmouseout="this.style.background=''">
@@ -402,14 +403,21 @@
 
           <td style="padding:13px 16px">
             <%
-              const stCls   = item.status_verifikasi === 'menunggu'  ? 'badge-menunggu'
-                            : item.status_verifikasi === 'disetujui' ? 'badge-disetujui'
+              const stCls   = item.overallStatus === 'menunggu'  ? 'badge-menunggu'
+                            : item.overallStatus === 'disetujui' ? 'badge-disetujui'
                             : 'badge-revisi';
-              const stLabel = item.status_verifikasi === 'menunggu'  ? 'Menunggu'
-                            : item.status_verifikasi === 'disetujui' ? 'Disetujui'
+              const stLabel = item.overallStatus === 'menunggu'  ? 'Menunggu'
+                            : item.overallStatus === 'disetujui' ? 'Disetujui'
                             : 'Revisi';
             %>
-            <span class="badge-status <%= stCls %>"><%= stLabel %></span>
+            <div style="display:flex; flex-direction:column; gap:3px">
+              <span class="badge-status <%= stCls %>"><%= stLabel %></span>
+              <% if (item.overallTahap) { %>
+                <span style="font-size:.68rem; color:#9abfad; font-weight:500">
+                  <%= item.overallTahap %>
+                </span>
+              <% } %>
+            </div>
           </td>
 
           <td style="padding:13px 16px">
@@ -847,6 +855,34 @@
       : allRows.filter(row => row.dataset.status === activeFilter);
     renderPage(1);
   }
+
+  window.addEventListener('DOMContentLoaded', () => {
+
+    const params =
+      new URLSearchParams(window.location.search);
+
+    const filter =
+      params.get('filter');
+
+    if (filter) {
+
+      const btn =
+        document.querySelector(
+          `.filter-tab[data-filter="${filter}"]`
+        );
+
+      if (btn) {
+        setFilter(filter, btn);
+      }
+
+    } else {
+
+      // default
+      applyFilter();
+
+    }
+
+  });
 
   function initRows() {
     allRows      = Array.from(document.querySelectorAll('.data-row'));

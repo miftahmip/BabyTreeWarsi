@@ -5,10 +5,19 @@ const { User } = require('../models');
 class AuthController {
 
     static loginPage(req, res) {
-        res.render('login');
+        const { email, returnUrl } = req.query;
+        res.render('login', {
+            formEmail: email || '',
+            returnUrl: returnUrl || ''
+        });
     }
     static registerPage(req, res) {
-        res.render('register');
+        const { email, nama, returnUrl } = req.query;
+        res.render('register', {
+            formEmail: email || '',
+            formNama: nama || '',
+            returnUrl: returnUrl || ''
+        });
     }
 
     static async register(req, res) {
@@ -20,7 +29,8 @@ class AuthController {
                 email,
                 no_telepon,
                 password,
-                konfirmasi_password
+                konfirmasi_password,
+                returnUrl
             } = req.body;
 
             // 🔥 validasi role
@@ -72,6 +82,12 @@ class AuthController {
                 status: 'aktif'
             });
 
+            if (returnUrl) {
+                return res.redirect(
+                    `/login?email=${encodeURIComponent(email)}&returnUrl=${encodeURIComponent(returnUrl)}`
+                );
+            }
+
             return res.redirect('/');
 
         } catch (error) {
@@ -82,7 +98,7 @@ class AuthController {
 
     static async login(req, res) {
         try {
-            const { email, password } = req.body;
+            const { email, password, returnUrl } = req.body;
 
             const user = await User.findOne({
                 where: { email }
@@ -91,14 +107,16 @@ class AuthController {
             if (!user) {
                 return res.render('login', {
                     error: 'Email tidak terdaftar. Periksa kembali email Anda.',
-                    formEmail: email
+                    formEmail: email,
+                    returnUrl: returnUrl || ''
                 });
             }
 
             if (user.status !== 'aktif') {
                 return res.render('login', {
                     error: 'Akun Anda dinonaktifkan. Hubungi Admin untuk informasi lebih lanjut.',
-                    formEmail: email
+                    formEmail: email,
+                    returnUrl: returnUrl || ''
                 });
             }
 
@@ -110,7 +128,8 @@ class AuthController {
             if (!match) {
                 return res.render('login', {
                     error: 'Password salah. Silakan coba lagi.',
-                    formEmail: email
+                    formEmail: email,
+                    returnUrl: returnUrl || ''
                 });
             }
 
@@ -138,25 +157,29 @@ class AuthController {
                 maxAge: 24 * 60 * 60 * 1000
             });
 
+            if (returnUrl && ['donatur_umum', 'donatur_corporate'].includes(user.role)) {
+                return res.redirect(returnUrl);
+            }
+
             switch (user.role) {
 
                 case 'admin_pusat':
-                    return res.redirect('/dashboard/admin-pusat');
+                    return res.redirect('/admin-pusat/dashboard');
 
                 case 'admin_wilayah':
-                    return res.redirect('/dashboard/admin-wilayah');
+                    return res.redirect('/admin-wilayah/dashboard');
 
                 case 'petugas_lapangan':
-                    return res.redirect('/dashboard/petugas');
+                    return res.redirect('/petugas-lapangan/dashboard');
 
                 case 'donatur_umum':
-                    return res.redirect('/dashboard/donatur');
+                    return res.redirect('/donatur/donasi-saya');
 
                 case 'donatur_corporate':
-                    return res.redirect('/dashboard/corporate');
+                    return res.redirect('/corporate/donasi-saya');
 
                 case 'pimpinan':
-                    return res.redirect('/dashboard/pimpinan');
+                    return res.redirect('/pimpinan/dashboard');
 
                 default:
                     return res.send('Role tidak valid');
@@ -165,7 +188,8 @@ class AuthController {
         } catch (error) {
         return res.render('login', {
             error: 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.',
-            formEmail: email ?? ''
+            formEmail: email ?? '',
+            returnUrl: returnUrl || ''
         });
         }
     }

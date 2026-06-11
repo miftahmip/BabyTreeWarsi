@@ -1,6 +1,6 @@
-const { Monitoring, DetailMonitoring, Pohon } = require('../models');
+const {Monitoring, DetailMonitoring, Pohon} = require('../models');
 const { Op } = require('sequelize');
-const { deleteFile } = require('../utils/fileHelper');
+const {deleteFile} = require('../utils/fileHelper');
 
 class MonitoringController {
 
@@ -19,7 +19,6 @@ class MonitoringController {
         status
       } = req.body;
 
-      // VALIDASI FOTO
       if (
         !req.files ||
         req.files.length === 0
@@ -42,8 +41,41 @@ class MonitoringController {
 
       }
 
+      // =========================
+      // CEK APAKAH SUDAH MATI
+      // =========================
 
-      const monitoringExist =
+      const monitoringMati =
+        await DetailMonitoring.findOne({
+
+          where: {
+            id_pohon,
+            status: 'mati'
+          },
+
+          include: [{
+            model: Monitoring,
+            as: 'monitoring',         // ← fix alias
+            attributes: [
+              'tahap_monitoring'
+            ]
+          }]
+
+        });
+
+      if (monitoringMati) {
+
+        return res.send(
+          `Pohon sudah mati pada monitoring ke-${monitoringMati.monitoring.tahap_monitoring}` // ← fix alias
+        );
+
+      }
+
+      // =========================
+      // CEK MASTER MONITORING
+      // =========================
+
+      let monitoring =
         await Monitoring.findOne({
 
           where: {
@@ -52,9 +84,7 @@ class MonitoringController {
 
         });
 
-      let monitoring;
-
-      if (!monitoringExist) {
+      if (!monitoring) {
 
         const id_monitoring =
           `MON${String(tahap_monitoring)
@@ -69,13 +99,7 @@ class MonitoringController {
 
           });
 
-      } else {
-
-        monitoring =
-          monitoringExist;
-
       }
-
 
       const detailExist =
         await DetailMonitoring.findOne({
@@ -99,12 +123,10 @@ class MonitoringController {
 
       }
 
-
       const fotoMonitoring =
         req.files.map(
           file => file.filename
         );
-
 
       await DetailMonitoring.create({
 
@@ -113,9 +135,14 @@ class MonitoringController {
 
         id_pohon,
 
-        tinggi_pohon,
-        diameter_pohon,
-        kesehatan_batang,
+        tinggi_pohon:
+          tinggi_pohon || 0,
+
+        diameter_pohon:
+          diameter_pohon || 0,
+
+        kesehatan_batang:
+          kesehatan_batang || 'buruk',
 
         foto_monitoring:
           JSON.stringify(
@@ -131,6 +158,102 @@ class MonitoringController {
 
       });
 
+      // =========================
+      // AUTO GENERATE JIKA MATI
+      // =========================
+
+      if (status === 'mati') {
+
+        const tahapSekarang =
+          Number(tahap_monitoring);
+
+        for (
+          let tahap = tahapSekarang + 1;
+          tahap <= 3;
+          tahap++
+        ) {
+
+          let monitoringNext =
+            await Monitoring.findOne({
+
+              where: {
+                tahap_monitoring:
+                  tahap
+              }
+
+            });
+
+          if (!monitoringNext) {
+
+            const idMonitoringBaru =
+              `MON${String(tahap)
+                .padStart(3, '0')}`;
+
+            monitoringNext =
+              await Monitoring.create({
+
+                id_monitoring:
+                  idMonitoringBaru,
+
+                tahap_monitoring:
+                  tahap,
+
+                tgl_monitoring
+
+              });
+
+          }
+
+          const detailNext =
+            await DetailMonitoring.findOne({
+
+              where: {
+
+                id_monitoring:
+                  monitoringNext.id_monitoring,
+
+                id_pohon
+
+              }
+
+            });
+
+          if (!detailNext) {
+
+            await DetailMonitoring.create({
+
+              id_monitoring:
+                monitoringNext.id_monitoring,
+
+              id_pohon,
+
+              tinggi_pohon: 0,
+
+              diameter_pohon: 0,
+
+              kesehatan_batang:
+                'sakit',
+
+              foto_monitoring:
+                JSON.stringify([]),
+
+              deskripsi:
+                `Pohon mati pada monitoring ke-${tahapSekarang}`,
+
+              status:
+                'mati',
+
+              status_verifikasi:
+                'menunggu'              // ← diubah dari 'disetujui'
+
+            });
+
+          }
+
+        }
+
+      }
+
       res.redirect(
         `/petugas-lapangan/pohon/detail/${id_pohon}`
       );
@@ -138,6 +261,7 @@ class MonitoringController {
     } catch (error) {
 
       console.log(error);
+
       res.send(error.message);
 
     }
@@ -180,7 +304,6 @@ class MonitoringController {
 
       }
 
-
       let fotoLama = [];
 
       try {
@@ -196,17 +319,13 @@ class MonitoringController {
 
       }
 
-      let fotoBaru =
-        fotoLama;
-
-
+      let fotoBaru = fotoLama;
 
       if (
         req.files &&
         req.files.length > 0
       ) {
 
-        // HAPUS FOTO LAMA
         fotoLama.forEach(file => {
 
           deleteFile(
@@ -216,14 +335,12 @@ class MonitoringController {
 
         });
 
-        // SIMPAN FOTO BARU
         fotoBaru =
           req.files.map(
             file => file.filename
           );
 
       }
-
 
       await detail.update({
 
@@ -250,6 +367,110 @@ class MonitoringController {
           null
 
       });
+
+      // =========================
+      // AUTO GENERATE JIKA MATI
+      // =========================
+
+      if (status === 'mati') {
+
+        const monitoringSekarang =
+          await Monitoring.findByPk(
+            id_monitoring
+          );
+
+        const tahapSekarang =
+          monitoringSekarang
+            .tahap_monitoring;
+
+        for (
+          let tahap = tahapSekarang + 1;
+          tahap <= 3;
+          tahap++
+        ) {
+
+          let monitoringNext =
+            await Monitoring.findOne({
+
+              where: {
+                tahap_monitoring:
+                  tahap
+              }
+
+            });
+
+          if (!monitoringNext) {
+
+            const idMonitoringBaru =
+              `MON${String(tahap)
+                .padStart(3, '0')}`;
+
+            monitoringNext =
+              await Monitoring.create({
+
+                id_monitoring:
+                  idMonitoringBaru,
+
+                tahap_monitoring:
+                  tahap,
+
+                tgl_monitoring:
+                  monitoringSekarang
+                    .tgl_monitoring
+
+              });
+
+          }
+
+          const detailNext =
+            await DetailMonitoring.findOne({
+
+              where: {
+
+                id_monitoring:
+                  monitoringNext.id_monitoring,
+
+                id_pohon
+
+              }
+
+            });
+
+          if (!detailNext) {
+
+            await DetailMonitoring.create({
+
+              id_monitoring:
+                monitoringNext.id_monitoring,
+
+              id_pohon,
+
+              tinggi_pohon: 0,
+
+              diameter_pohon: 0,
+
+              kesehatan_batang:
+                'sakit',
+
+              foto_monitoring:
+                JSON.stringify([]),
+
+              deskripsi:
+                `Pohon mati pada monitoring ke-${tahapSekarang}`,
+
+              status:
+                'mati',
+
+              status_verifikasi:
+                'menunggu'              // ← diubah dari 'disetujui'
+
+            });
+
+          }
+
+        }
+
+      }
 
       res.redirect(
         `/petugas-lapangan/pohon/detail/${id_pohon}`

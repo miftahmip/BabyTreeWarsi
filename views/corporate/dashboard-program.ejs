@@ -1,0 +1,911 @@
+<% layout('layouts/corporate') %>
+
+<style>
+  :root {
+    --green-deep:   #1a4731;
+    --green-mid:    #2d6a4f;
+    --green-bright: #40916c;
+    --green-light:  #74c69d;
+    --green-pale:   #d8f3dc;
+    --green-ghost:  #f0faf4;
+    --brown-mid:    #7d5a3c;
+    --brown-light:  #c9a87c;
+    --cream:        #fdf8f0;
+  }
+
+  .cp-page {
+    padding: 28px 32px 48px;
+    background: var(--cream);
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    max-width: 960px;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* ── BACK ── */
+  .cp-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brown-mid);
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: color .15s;
+  }
+  .cp-back:hover { color: var(--green-deep); }
+
+  /* ── HERO ── */
+  .cp-hero {
+    background: linear-gradient(135deg, var(--green-mid) 0%, var(--green-deep) 100%);
+    border-radius: 18px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cp-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: rgba(116,198,157,.12);
+    pointer-events: none;
+  }
+
+  .cp-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: 30%;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    pointer-events: none;
+  }
+
+  .cp-hero-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green-light);
+    margin-bottom: 8px;
+  }
+
+  .cp-hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem;
+    color: white;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    max-width: 580px;
+  }
+
+  .cp-hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .cp-hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(255,255,255,.65);
+  }
+
+  .cp-hero-meta-item svg { color: var(--green-light); }
+
+  .cp-hero-actions {
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .cp-btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 20px;
+    background: rgba(255,255,255,.18);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,.25);
+    cursor: pointer;
+    transition: background .15s;
+    backdrop-filter: blur(4px);
+  }
+
+  .cp-btn-export:hover { background: rgba(255,255,255,.28); }
+
+  /* ── STATS ── */
+  .cp-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .cp-stat-card {
+    background: white;
+    border: 1px solid #dceee3;
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: transform .2s, box-shadow .2s;
+  }
+
+  .cp-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26,71,49,.08);
+  }
+
+  .cp-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #9abfad;
+    margin-bottom: 8px;
+  }
+
+  .cp-stat-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .cp-stat-sub {
+    font-size: 11px;
+    color: #b8d4c4;
+  }
+
+  .cp-stat-bar {
+    height: 3px;
+    background: var(--green-ghost);
+    border-radius: 99px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .cp-stat-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+  }
+
+  /* ── 2 COL ── */
+  .cp-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* ── CARD BASE ── */
+  .cp-card {
+    background: white;
+    border: 1px solid #dceee3;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .cp-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--green-ghost);
+  }
+
+  .cp-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-deep);
+  }
+
+  .cp-card-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green-bright);
+    background: var(--green-ghost);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--green-pale);
+  }
+
+  /* ── SURVIVAL RING ── */
+  .cp-survival-wrap {
+    padding: 20px 18px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .cp-ring-wrap { position: relative; flex-shrink: 0; }
+
+  .cp-ring { transform: rotate(-90deg); }
+
+  .cp-ring-bg {
+    fill: none;
+    stroke: var(--green-ghost);
+    stroke-width: 8;
+  }
+
+  .cp-ring-fill {
+    fill: none;
+    stroke: var(--green-bright);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1);
+  }
+
+  .cp-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cp-ring-pct {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    color: var(--green-deep);
+    line-height: 1;
+  }
+
+  .cp-ring-sub {
+    font-size: 9px;
+    color: #9abfad;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-top: 2px;
+  }
+
+  .cp-survival-rows {}
+
+  .cp-survival-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .cp-survival-row:last-child { margin-bottom: 0; }
+
+  .cp-survival-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cp-survival-label { font-size: 12px; color: #9abfad; flex: 1; }
+  .cp-survival-val   { font-size: 13px; font-weight: 700; color: var(--green-deep); }
+
+  /* ── PROGRESS ── */
+  .cp-progress-body { padding: 14px 18px; }
+
+  .cp-progress-item { margin-bottom: 14px; }
+  .cp-progress-item:last-child { margin-bottom: 0; }
+
+  .cp-progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .cp-progress-label { font-size: 12px; font-weight: 600; color: var(--green-mid); }
+  .cp-progress-count { font-size: 11px; color: #9abfad; font-family: 'DM Mono', monospace; }
+
+  .cp-progress-track {
+    height: 7px;
+    background: var(--green-ghost);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .cp-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s cubic-bezier(.22,1,.36,1);
+    width: 0;
+  }
+
+  /* ── CHART MONITORING ── */
+  .cp-chart-body { padding: 16px 18px; }
+
+  .cp-chart-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .cp-chart-row:last-child { margin-bottom: 0; }
+
+  .cp-chart-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9abfad;
+    width: 72px;
+    flex-shrink: 0;
+  }
+
+  .cp-chart-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cp-chart-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cp-chart-bar {
+    height: 8px;
+    border-radius: 99px;
+    transition: width 1s cubic-bezier(.22,1,.36,1);
+    width: 0;
+    min-width: 2px;
+  }
+
+  .cp-chart-bar-val {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: #9abfad;
+    white-space: nowrap;
+  }
+
+  /* ── DISTRIBUSI ── */
+  .cp-dist-body { padding: 16px 18px; }
+
+  .cp-dist-bar-wrap {
+    height: 10px;
+    background: var(--green-ghost);
+    border-radius: 99px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 12px;
+  }
+
+  .cp-dist-seg {
+    height: 100%;
+    transition: width 1s cubic-bezier(.22,1,.36,1);
+    width: 0;
+  }
+
+  .cp-dist-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .cp-dist-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #6b8c7a;
+  }
+
+  .cp-dist-legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cp-dist-legend-val {
+    font-weight: 700;
+    color: var(--green-deep);
+    margin-left: 2px;
+  }
+
+  /* ── GALLERY ── */
+  .cp-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 110px));
+    gap: 8px;
+    padding: 14px 18px;
+  }
+
+  .cp-gallery-item {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    cursor: pointer;
+  }
+
+  .cp-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .3s;
+  }
+
+  .cp-gallery-item:hover img { transform: scale(1.06); }
+
+  .cp-gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(26,71,49,.75), transparent);
+    display: flex;
+    align-items: flex-end;
+    padding: 7px;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .cp-gallery-item:hover .cp-gallery-overlay { opacity: 1; }
+
+  .cp-gallery-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    background: rgba(0,0,0,.3);
+    padding: 2px 7px;
+    border-radius: 10px;
+    line-height: 1.4;
+  }
+
+  .cp-gallery-empty {
+    padding: 32px 18px;
+    text-align: center;
+    color: #b8d4c4;
+    font-size: 13px;
+  }
+
+  /* ── TIMELINE ── */
+  .cp-timeline { padding: 14px 18px; }
+
+  .cp-tl-item {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+    position: relative;
+  }
+
+  .cp-tl-item:last-child { padding-bottom: 0; }
+
+  .cp-tl-item::before {
+    content: '';
+    position: absolute;
+    left: 12px; top: 26px; bottom: 0;
+    width: 1px;
+    background: var(--green-pale);
+  }
+
+  .cp-tl-item:last-child::before { display: none; }
+
+  .cp-tl-dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--green-ghost);
+    border: 2px solid var(--green-pale);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--green-mid);
+    position: relative;
+    z-index: 1;
+  }
+
+  .cp-tl-dot.done {
+    background: var(--green-mid);
+    border-color: var(--green-mid);
+    color: white;
+  }
+
+  .cp-tl-content { padding-top: 3px; flex: 1; }
+
+  .cp-tl-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-deep);
+    margin-bottom: 2px;
+  }
+
+  .cp-tl-sub { font-size: 11px; color: #9abfad; }
+
+  .cp-tl-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green-bright);
+    font-family: 'DM Mono', monospace;
+    margin-top: 3px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 720px) {
+    .cp-page { padding: 16px 16px 40px; }
+    .cp-hero { padding: 22px 20px; }
+    .cp-hero-title { font-size: 1.35rem; }
+    .cp-stats { grid-template-columns: 1fr 1fr; }
+    .cp-cols { grid-template-columns: 1fr; }
+    .cp-stat-value { font-size: 1.6rem; }
+  }
+
+  @media (max-width: 420px) {
+    .cp-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .cp-stat-card { padding: 12px 14px; }
+  }
+</style>
+
+<div class="cp-page">
+
+  <!-- BACK -->
+  <a href="/corporate/donasi-saya" class="cp-back">
+    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Kembali ke Donasi Saya
+  </a>
+
+  <!-- HERO -->
+  <div class="cp-hero">
+    <div class="cp-hero-eyebrow">Dashboard Program Corporate</div>
+    <div class="cp-hero-title"><%= program.judul_program %></div>
+    <div class="cp-hero-meta">
+      <div class="cp-hero-meta-item">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M12 22V12" stroke-linecap="round"/>
+          <path d="M12 12C12 12 8 9 8 5C8 2.5 10 1 12 1C14 1 16 2.5 16 5C16 9 12 12 12 12Z"/>
+        </svg>
+        <%= totalPohon.toLocaleString('id-ID') %> pohon Anda di program ini
+      </div>
+      <% if (program.provinsi || program.kota) { %>
+      <div class="cp-hero-meta-item">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <%= [program.kota, program.provinsi].filter(Boolean).join(', ') %>
+      </div>
+      <% } %>
+      <div class="cp-hero-meta-item">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg>
+        <%= donasi.createdAt ? new Date(donasi.createdAt).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' }) : '—' %>
+      </div>
+    </div>
+    <div class="cp-hero-actions">
+      <a href="/corporate/export-csr/<%= donasi.id_donasi %>" class="cp-btn-export">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Export Laporan CSR
+      </a>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="cp-stats">
+    <div class="cp-stat-card">
+      <div class="cp-stat-label">Total Pohon</div>
+      <div class="cp-stat-value" style="color: var(--green-deep)"><%= totalPohon.toLocaleString('id-ID') %></div>
+      <div class="cp-stat-sub">pohon terdaftar</div>
+      <div class="cp-stat-bar">
+        <div class="cp-stat-bar-fill" data-width="100" data-color="var(--green-light)" style="background: var(--green-light)"></div>
+      </div>
+    </div>
+    <div class="cp-stat-card">
+      <div class="cp-stat-label">Pohon Hidup</div>
+      <div class="cp-stat-value" style="color: var(--green-bright)"><%= pohonHidup.toLocaleString('id-ID') %></div>
+      <div class="cp-stat-sub">dari monitoring terakhir</div>
+      <div class="cp-stat-bar">
+        <div class="cp-stat-bar-fill"
+             data-width="<%= totalPohon > 0 ? (pohonHidup/totalPohon*100).toFixed(1) : 0 %>"
+             data-color="var(--green-bright)"
+             style="background: var(--green-bright)"></div>
+      </div>
+    </div>
+    <div class="cp-stat-card">
+      <div class="cp-stat-label">Pohon Mati</div>
+      <div class="cp-stat-value" style="color: #e57373"><%= pohonMati.toLocaleString('id-ID') %></div>
+      <div class="cp-stat-sub">terdeteksi mati</div>
+      <div class="cp-stat-bar">
+        <div class="cp-stat-bar-fill"
+             data-width="<%= totalPohon > 0 ? (pohonMati/totalPohon*100).toFixed(1) : 0 %>"
+             data-color="#e57373"
+             style="background: #e57373"></div>
+      </div>
+    </div>
+    <div class="cp-stat-card">
+      <div class="cp-stat-label">Belum Monitoring</div>
+      <div class="cp-stat-value" style="color: var(--brown-light)"><%= pohonBelumMonitoring.toLocaleString('id-ID') %></div>
+      <div class="cp-stat-sub">belum ada data</div>
+      <div class="cp-stat-bar">
+        <div class="cp-stat-bar-fill"
+             data-width="<%= totalPohon > 0 ? (pohonBelumMonitoring/totalPohon*100).toFixed(1) : 0 %>"
+             data-color="var(--brown-light)"
+             style="background: var(--brown-light)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 1: SURVIVAL + PROGRESS -->
+  <div class="cp-cols">
+
+    <!-- SURVIVAL -->
+    <div class="cp-card" style="margin-bottom:0">
+      <div class="cp-card-head">
+        <span class="cp-card-title">Survival Rate</span>
+        <span class="cp-card-badge"><%= survivalRate %>%</span>
+      </div>
+      <div class="cp-survival-wrap">
+        <div class="cp-ring-wrap">
+          <svg class="cp-ring" width="100" height="100" viewBox="0 0 100 100">
+            <circle class="cp-ring-bg" cx="50" cy="50" r="45"/>
+            <circle class="cp-ring-fill" id="survivalRing" cx="50" cy="50" r="45"/>
+          </svg>
+          <div class="cp-ring-label">
+            <div class="cp-ring-pct"><%= survivalRate %><span style="font-size:.7rem">%</span></div>
+            <div class="cp-ring-sub">hidup</div>
+          </div>
+        </div>
+        <div class="cp-survival-rows">
+          <div class="cp-survival-row">
+            <div class="cp-survival-dot" style="background: var(--green-bright)"></div>
+            <div class="cp-survival-label">Hidup</div>
+            <div class="cp-survival-val"><%= pohonHidup %></div>
+          </div>
+          <div class="cp-survival-row">
+            <div class="cp-survival-dot" style="background: #e57373"></div>
+            <div class="cp-survival-label">Mati</div>
+            <div class="cp-survival-val"><%= pohonMati %></div>
+          </div>
+          <div class="cp-survival-row">
+            <div class="cp-survival-dot" style="background: var(--brown-light)"></div>
+            <div class="cp-survival-label">Belum data</div>
+            <div class="cp-survival-val"><%= pohonBelumMonitoring %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS TAHAP -->
+    <div class="cp-card" style="margin-bottom:0">
+      <div class="cp-card-head">
+        <span class="cp-card-title">Progress Monitoring</span>
+        <span class="cp-card-badge"><%= totalPohon %> pohon</span>
+      </div>
+      <div class="cp-progress-body">
+        <% progressTahap.forEach((item, i) => { %>
+          <%
+            const pct    = totalPohon > 0 ? ((item.count / totalPohon) * 100).toFixed(1) : 0;
+            const colors = ['var(--green-light)', 'var(--green-bright)', 'var(--green-mid)'];
+          %>
+          <div class="cp-progress-item">
+            <div class="cp-progress-row">
+              <span class="cp-progress-label">Monitoring <%= item.tahap %></span>
+              <span class="cp-progress-count"><%= item.count %>/<%= totalPohon %> (<%= pct %>%)</span>
+            </div>
+            <div class="cp-progress-track">
+              <div class="cp-progress-fill"
+                   data-width="<%= pct %>"
+                   data-color="<%= colors[i] %>"></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-bottom: 16px"></div>
+
+  <!-- ROW 2: CHART + TIMELINE -->
+  <div class="cp-cols">
+
+    <!-- CHART PER TAHAP -->
+    <div class="cp-card" style="margin-bottom:0">
+      <div class="cp-card-head">
+        <span class="cp-card-title">Status per Tahap Monitoring</span>
+      </div>
+      <div class="cp-chart-body">
+        <% const tahapKeys = Object.keys(monitoringChart).sort(); %>
+        <% if (tahapKeys.length > 0) { %>
+          <% tahapKeys.forEach(tahap => { %>
+            <%
+              const ct     = monitoringChart[tahap];
+              const total  = ct.hidup + ct.mati;
+              const maxVal = Math.max(...tahapKeys.map(t => monitoringChart[t].hidup + monitoringChart[t].mati));
+              const pctH   = maxVal > 0 ? (ct.hidup / maxVal * 100).toFixed(1) : 0;
+              const pctM   = maxVal > 0 ? (ct.mati  / maxVal * 100).toFixed(1) : 0;
+            %>
+            <div class="cp-chart-row">
+              <div class="cp-chart-label">Tahap <%= tahap %></div>
+              <div class="cp-chart-bars">
+                <div class="cp-chart-bar-wrap">
+                  <div class="cp-chart-bar"
+                       data-width="<%= pctH %>"
+                       style="background: var(--green-bright); max-width: 80%"></div>
+                  <span class="cp-chart-bar-val"><%= ct.hidup %> hidup</span>
+                </div>
+                <div class="cp-chart-bar-wrap">
+                  <div class="cp-chart-bar"
+                       data-width="<%= pctM %>"
+                       style="background: #e57373; max-width: 80%"></div>
+                  <span class="cp-chart-bar-val"><%= ct.mati %> mati</span>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div style="padding: 24px 0; text-align:center; color: #b8d4c4; font-size:13px">
+            Belum ada data monitoring
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="cp-card" style="margin-bottom:0">
+      <div class="cp-card-head">
+        <span class="cp-card-title">Tahapan Monitoring</span>
+      </div>
+      <div class="cp-timeline">
+        <% progressTahap.forEach(item => { %>
+          <div class="cp-tl-item">
+            <div class="cp-tl-dot <%= item.count > 0 ? 'done' : '' %>">
+              <% if (item.count > 0) { %>
+                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              <% } else { %>
+                <%= item.tahap %>
+              <% } %>
+            </div>
+            <div class="cp-tl-content">
+              <div class="cp-tl-title">Monitoring Tahap <%= item.tahap %></div>
+              <div class="cp-tl-sub">
+                <% if (item.count === 0) { %>
+                  Belum ada data monitoring
+                <% } else if (item.count < totalPohon) { %>
+                  Sedang berlangsung
+                <% } else { %>
+                  Semua pohon sudah dimonitor
+                <% } %>
+              </div>
+              <% if (item.count > 0) { %>
+                <div class="cp-tl-count"><%= item.count %> dari <%= totalPohon %> pohon</div>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-bottom: 16px"></div>
+
+  <!-- DISTRIBUSI STATUS -->
+  <div class="cp-card">
+    <div class="cp-card-head">
+      <span class="cp-card-title">Distribusi Status Pohon</span>
+    </div>
+    <div class="cp-dist-body">
+      <div class="cp-dist-bar-wrap">
+        <div class="cp-dist-seg"
+             data-width="<%= totalPohon > 0 ? (pohonHidup/totalPohon*100).toFixed(1) : 0 %>"
+             style="background: var(--green-bright); border-radius: 99px 0 0 99px;"></div>
+        <div class="cp-dist-seg"
+             data-width="<%= totalPohon > 0 ? (pohonMati/totalPohon*100).toFixed(1) : 0 %>"
+             style="background: #e57373;"></div>
+        <div class="cp-dist-seg"
+             data-width="<%= totalPohon > 0 ? (pohonBelumMonitoring/totalPohon*100).toFixed(1) : 0 %>"
+             style="background: var(--green-ghost); border-radius: 0 99px 99px 0;"></div>
+      </div>
+      <div class="cp-dist-legend">
+        <div class="cp-dist-legend-item">
+          <div class="cp-dist-legend-dot" style="background: var(--green-bright)"></div>
+          Hidup <span class="cp-dist-legend-val"><%= totalPohon > 0 ? (pohonHidup/totalPohon*100).toFixed(1) : 0 %>%</span>
+        </div>
+        <div class="cp-dist-legend-item">
+          <div class="cp-dist-legend-dot" style="background: #e57373"></div>
+          Mati <span class="cp-dist-legend-val"><%= totalPohon > 0 ? (pohonMati/totalPohon*100).toFixed(1) : 0 %>%</span>
+        </div>
+        <div class="cp-dist-legend-item">
+          <div class="cp-dist-legend-dot" style="background: #d0e4d8"></div>
+          Belum data <span class="cp-dist-legend-val"><%= totalPohon > 0 ? (pohonBelumMonitoring/totalPohon*100).toFixed(1) : 0 %>%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GALERI -->
+  <div class="cp-card">
+    <div class="cp-card-head">
+      <span class="cp-card-title">Galeri Monitoring</span>
+      <span class="cp-card-badge"><%= galleryMonitoring.length %> foto</span>
+    </div>
+    <% if (galleryMonitoring.length > 0) { %>
+      <div class="cp-gallery-grid">
+        <% galleryMonitoring.forEach(item => { %>
+          <div class="cp-gallery-item">
+            <img src="/uploads/monitoring/<%= item.gambar %>" alt="Foto pohon <%= item.pohon %>">
+            <div class="cp-gallery-overlay">
+              <span class="cp-gallery-tag">
+                Tahap <%= item.tahap %><br>
+                <%= item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day:'2-digit', month:'short' }) : '' %>
+              </span>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="cp-gallery-empty">
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" style="margin: 0 auto 8px; display:block; color: #c8dfd4">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        Belum ada foto monitoring
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<script>
+  window.addEventListener('load', function () {
+
+    // Survival ring
+    const pct    = parseFloat('<%= survivalRate %>') || 0;
+    const ring   = document.getElementById('survivalRing');
+    const circum = 2 * Math.PI * 45;
+    setTimeout(() => {
+      ring.style.strokeDasharray  = circum;
+      ring.style.strokeDashoffset = circum - (pct / 100) * circum;
+    }, 200);
+
+    // Progress bar
+    document.querySelectorAll('.cp-progress-fill').forEach(el => {
+      el.style.background = el.dataset.color || 'var(--green-light)';
+      setTimeout(() => { el.style.width = (el.dataset.width || 0) + '%'; }, 300);
+    });
+
+    // Stat bar
+    document.querySelectorAll('.cp-stat-bar-fill').forEach(el => {
+      setTimeout(() => { el.style.width = (el.dataset.width || 0) + '%'; }, 300);
+    });
+
+    // Chart bar
+    document.querySelectorAll('.cp-chart-bar').forEach(el => {
+      setTimeout(() => { el.style.width = (el.dataset.width || 0) + '%'; }, 400);
+    });
+
+    // Distribusi
+    document.querySelectorAll('.cp-dist-seg').forEach(el => {
+      setTimeout(() => { el.style.width = (el.dataset.width || 0) + '%'; }, 300);
+    });
+
+  });
+</script>

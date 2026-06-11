@@ -1,4 +1,4 @@
-const {Pohon, Penanaman, ProgramDonasi, JenisPohon, Mitra, DetailMonitoring, Monitoring} = require('../models');
+const {Pohon, Penanaman, ProgramDonasi, JenisPohon, Mitra, DetailMonitoring, Monitoring, Donasi, DonasiPohon,User} = require('../models');
 const { Op } = require('sequelize');
 const QRCode = require('qrcode');
 const path = require('path');
@@ -7,186 +7,390 @@ const {deleteFile} = require('../utils/fileHelper');
 
 class PohonController {
 
-  // LIST DATA POHON
-  static async index(req, res) {
+// LIST DATA POHON
+static async index(req, res) {
 
-    try {
+  try {
 
-      const { id_penanaman } =
-        req.params;
+    const { id_penanaman } =
+      req.params;
 
-      const penanaman =
-        await Penanaman.findByPk(
-          id_penanaman,
-          {
-            include: [
-              {
-                model: ProgramDonasi,
-                as: 'program'
-              }
-            ]
-          }
-        );
-
-      const data =
-        await Pohon.findAll({
-
-          where: {
-            id_penanaman
-          },
-
+    const penanaman =
+      await Penanaman.findByPk(
+        id_penanaman,
+        {
           include: [
             {
-              model: JenisPohon,
-              as: 'jenisPohon'
-            },
-            {
-              model: Mitra,
-              as: 'mitra'
+              model: ProgramDonasi,
+              as: 'program'
             }
-          ],
-
-          order: [['createdAt', 'DESC']]
-        });
-
-      const jenisPohon =
-        await JenisPohon.findAll({
-          order: [['nama_pohon', 'ASC']]
-        });
-
-      const mitra =
-        await Mitra.findAll({
-          order: [['nama_mitra', 'ASC']]
-        });
-
-      res.render(
-        'petugas-lapangan/pohon/index',
-        {
-          title: 'Data Pohon',
-          data,
-          penanaman,
-          jenisPohon,
-          mitra,
-          user: req.user
+          ]
         }
       );
 
-    } catch (error) {
+    const pohonList =
+      await Pohon.findAll({
 
-      console.log(error);
-      res.send(error.message);
+        where: {
+          id_penanaman
+        },
 
-    }
-
-  }
-  // CREATE DATA POHON
-  static async create(req, res) {
-
-    try {
-
-      const {
-        id_penanaman,
-        id_mitra,
-        id_jenis_pohon,
-        tgl_tanam,
-        latitude,
-        longitude
-      } = req.body;
-
-      // VALIDASI FOTO
-      if (
-        !req.files ||
-        req.files.length === 0
-      ) {
-
-        return res.send(
-          'Foto bukti tanam wajib diupload'
-        );
-
-      }
-
-      // GENERATE ID POHON
-
-      const jenisPohonData =
-        await JenisPohon.findByPk(id_jenis_pohon);
-
-      const namaPohon =
-        jenisPohonData.nama_pohon
-          .replace(/\s+/g, '')
-          .toUpperCase();
-
-      // kode 3 huruf jenis pohon
-      const kodePohon =
-        namaPohon.substring(0, 3);
-
-      // ambil id penanaman langsung sebagai prefix
-      const prefix = `${id_penanaman}-${kodePohon}`;
-
-      // cari data terakhir berdasarkan penanaman + jenis pohon
-      const lastData =
-        await Pohon.findOne({
-
-          where: {
-            id_pohon: {
-              [Op.like]: `${prefix}%`
-            }
+        include: [
+          {
+            model: JenisPohon,
+            as: 'jenisPohon'
           },
+          {
+            model: Mitra,
+            as: 'mitra'
+          },
+          {
+            model: DetailMonitoring,
+            as: 'detailMonitoring',
+            attributes: [
+              'status_verifikasi'
+            ],
+            include: [
+              {
+                model: Monitoring,
+                as: 'monitoring',
+                attributes: [
+                  'tahap_monitoring'
+                ]
+              }
+            ]
+          }
+        ],
 
-          order: [['id_pohon', 'DESC']]
-        });
-
-      let nomor = 1;
-
-      if (lastData) {
-
-        nomor =
-          parseInt(
-            lastData.id_pohon.slice(-3)
-          ) + 1;
-      }
-
-      // FINAL ID
-      const id_pohon =
-        `${prefix}-${String(nomor).padStart(3, '0')}`;
-
-
-
-      const foto =
-        req.files.map(
-          file => file.filename
-        );
-
-      // SIMPAN DATA
-      await Pohon.create({
-
-        id_pohon,
-        id_penanaman,
-        id_mitra,
-        id_jenis_pohon,
-        tgl_tanam,
-        latitude,
-        longitude,
-
-        foto_bukti_tanam:
-          JSON.stringify(foto),
-
-        status_verifikasi:
-          'menunggu'
-
+        order: [['createdAt', 'DESC']]
       });
 
-      res.redirect(
-        `/petugas-lapangan/pohon/${id_penanaman}`
+    const data = pohonList.map(pohon => {
+
+      const monList =
+        pohon.detailMonitoring || [];
+
+      // Hanya ambil monitoring non-auto-generated
+      // (auto-generated: status mati + disetujui + foto kosong)
+      const monAsli = monList.filter(m => {
+        if (m.status_verifikasi !== 'disetujui')
+          return true;
+        // kalau disetujui, masih bisa asli
+        // — biarkan masuk, tidak ada foto di sini
+        // jadi cukup sertakan semua non-auto
+        return true;
+      });
+
+      // Urutkan berdasarkan tahap_monitoring (tertinggi duluan)
+      const monSorted = [...monAsli].sort((a, b) => {
+        const tA =
+          Number(a.monitoring?.tahap_monitoring || 0);
+        const tB =
+          Number(b.monitoring?.tahap_monitoring || 0);
+        return tB - tA;
+      });
+
+      let overallStatus  = pohon.status_verifikasi;
+      let overallTahap   = null; // label sub-badge
+
+      // Cek dari tahap tertinggi ke terendah
+      const monRevisi = monSorted.find(
+        m => m.status_verifikasi === 'revisi'
+      );
+      const monMenunggu = monSorted.find(
+        m => m.status_verifikasi === 'menunggu'
       );
 
-    } catch (error) {
+      if (monRevisi) {
 
-      console.log(error);
-      res.send(error.message);
+        overallStatus = 'revisi';
+        overallTahap  =
+          `Monitoring ${monRevisi.monitoring?.tahap_monitoring}`;
+
+      } else if (monMenunggu) {
+
+        overallStatus = 'menunggu';
+        overallTahap  =
+          `Monitoring ${monMenunggu.monitoring?.tahap_monitoring}`;
+
+      } else if (
+        pohon.status_verifikasi === 'revisi'
+      ) {
+
+        overallStatus = 'revisi';
+        overallTahap  = 'Data Penanaman';
+
+      } else if (
+        pohon.status_verifikasi === 'menunggu'
+      ) {
+
+        overallStatus = 'menunggu';
+        overallTahap  = 'Data Penanaman';
+
+      } else if (
+        pohon.status_verifikasi === 'disetujui' &&
+        monList.length === 0
+      ) {
+
+        overallStatus = 'disetujui';
+        overallTahap  = 'Data Penanaman';
+
+      } else if (
+        pohon.status_verifikasi === 'disetujui' &&
+        monList.length > 0
+      ) {
+
+        // Cari tahap monitoring tertinggi yang disetujui
+        const monDisetujui = monSorted.find(
+          m => m.status_verifikasi === 'disetujui'
+        );
+
+        overallStatus = 'disetujui';
+        overallTahap  = monDisetujui
+          ? `Monitoring ${monDisetujui.monitoring?.tahap_monitoring}`
+          : 'Data Penanaman';
+
+      }
+
+      return {
+        ...pohon.toJSON(),
+        overallStatus,
+        overallTahap
+      };
+
+    });
+
+    const jenisPohon =
+      await JenisPohon.findAll({
+        order: [['nama_pohon', 'ASC']]
+      });
+
+    const mitra =
+      await Mitra.findAll({
+        order: [['nama_mitra', 'ASC']]
+      });
+
+    res.render(
+      'petugas-lapangan/pohon/index',
+      {
+        title: 'Data Pohon',
+        data,
+        penanaman,
+        jenisPohon,
+        mitra,
+        user: req.user
+      }
+    );
+
+  } catch (error) {
+
+    console.log(error);
+    res.send(error.message);
+
+  }
+
+}
+
+    // CREATE DATA POHON
+    static async create(req, res) {
+
+      try {
+
+        const {
+          id_penanaman,
+          id_mitra,
+          id_jenis_pohon,
+          tgl_tanam,
+          latitude,
+          longitude
+        } = req.body;
+
+        // VALIDASI FOTO
+        if (
+          !req.files ||
+          req.files.length === 0
+        ) {
+
+          return res.send(
+            'Foto bukti tanam wajib diupload'
+          );
+
+        }
+
+        // AMBIL DATA PENANAMAN
+        const penanaman =
+          await Penanaman.findByPk(
+            id_penanaman
+          );
+
+        if (!penanaman) {
+
+          return res.send(
+            'Data penanaman tidak ditemukan'
+          );
+
+        }
+
+        // GENERATE ID POHON
+
+        const jenisPohonData =
+          await JenisPohon.findByPk(
+            id_jenis_pohon
+          );
+
+        const namaPohon =
+          jenisPohonData.nama_pohon
+            .replace(/\s+/g, '')
+            .toUpperCase();
+
+        // kode 3 huruf jenis pohon
+        const kodePohon =
+          namaPohon.substring(0, 3);
+
+        // ambil id penanaman langsung sebagai prefix
+        const prefix =
+          `${id_penanaman}-${kodePohon}`;
+
+        // cari data terakhir
+        const lastData =
+          await Pohon.findOne({
+
+            where: {
+              id_pohon: {
+                [Op.like]:
+                  `${prefix}%`
+              }
+            },
+
+            order: [
+              ['id_pohon', 'DESC']
+            ]
+          });
+
+        let nomor = 1;
+
+        if (lastData) {
+
+          nomor =
+            parseInt(
+              lastData.id_pohon.slice(-3)
+            ) + 1;
+        }
+
+        // FINAL ID
+        const id_pohon =
+          `${prefix}-${String(nomor)
+            .padStart(3, '0')}`;
+
+        const foto =
+          req.files.map(
+            file => file.filename
+          );
+
+        // ======================================
+        // SIMPAN DATA POHON
+        // ======================================
+
+        const pohonBaru =
+          await Pohon.create({
+
+            id_pohon,
+            id_penanaman,
+            id_mitra,
+            id_jenis_pohon,
+            tgl_tanam,
+            latitude,
+            longitude,
+
+            foto_bukti_tanam:
+              JSON.stringify(foto),
+
+            status_verifikasi:
+              'menunggu'
+
+          });
+
+        // ======================================
+        // AUTO ASSIGN KE DONATUR CORPORATE
+        // ======================================
+
+        const corporateDonasi =
+          await Donasi.findAll({
+
+            where: {
+              id_program:
+                penanaman.id_program
+            },
+
+            include: [
+              {
+                model: User,
+                as: 'user',
+
+                where: {
+                  role:
+                    'donatur_corporate'
+                }
+              }
+            ],
+
+            order: [
+              ['createdAt', 'ASC']
+            ]
+
+          });
+
+        // LOOP DONASI CORPORATE
+        for (const donasi of corporateDonasi) {
+
+          // HITUNG YANG SUDAH TERASSIGN
+          const assigned =
+            await DonasiPohon.count({
+
+              where: {
+                id_donasi:
+                  donasi.id_donasi
+              }
+
+            });
+
+          // CEK MASIH ADA KUOTA?
+          if (
+            assigned <
+            donasi.jumlah_pohon
+          ) {
+
+            // ASSIGN POHON
+            await DonasiPohon.create({
+
+              id_donasi:
+                donasi.id_donasi,
+
+              id_pohon:
+                pohonBaru.id_pohon
+
+            });
+
+            // STOP LOOP
+            break;
+
+          }
+
+        }
+
+        res.redirect(
+          `/petugas-lapangan/pohon/${id_penanaman}`
+        );
+
+      } catch (error) {
+
+        console.log(error);
+        res.send(error.message);
+
+      }
 
     }
 
-  }
 
   // DETAIL DATA POHON
   static async detail(req, res) {
@@ -506,6 +710,70 @@ class PohonController {
 
     }
 
+  }
+
+  // HALAMAN SCAN QR
+  static async scanQRPage(req, res) {
+    try {
+      return res.render('petugas-lapangan/pohon/scan', {
+        title: 'Scan QR Pohon',
+        activePage: 'scan-qr',
+        user: req.user,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send(error.message);
+    }
+  }
+  
+  // PROSES HASIL SCAN QR
+  static async processScanQR(req, res) {
+    try {
+      const { qr_result } = req.body;
+  
+      if (!qr_result) {
+        return res.status(400).json({
+          success: false,
+          message: 'Hasil scan QR tidak ditemukan.',
+        });
+      }
+  
+      // Validasi format URL — harus mengandung path detail pohon
+      const detailPattern = /\/petugas-lapangan\/pohon\/detail\/([^/?#]+)/;
+      const match = qr_result.match(detailPattern);
+  
+      if (!match) {
+        return res.status(400).json({
+          success: false,
+          message: 'QR Code ini bukan milik sistem BabyTreeWarsi.',
+        });
+      }
+  
+      const idPohon = match[1];
+  
+      // Validasi pohon benar-benar ada di database
+      const pohon = await Pohon.findByPk(idPohon);
+  
+      if (!pohon) {
+        return res.status(404).json({
+          success: false,
+          message: `Pohon dengan ID "${idPohon}" tidak ditemukan di database.`,
+        });
+      }
+  
+      // Kirim redirect URL ke client (AJAX-friendly)
+      return res.status(200).json({
+        success: true,
+        redirect_url: `/petugas-lapangan/pohon/detail/${idPohon}`,
+      });
+  
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
   }
 
 }

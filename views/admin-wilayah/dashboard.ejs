@@ -1,0 +1,554 @@
+<% layout('layouts/admin-wilayah') %>
+<% locals.activePage = 'dashboard' %>
+<% locals.pageTitle = 'Dashboard Admin Wilayah' %>
+
+<style>
+  :root {
+    --green-deep:   #1a4731;
+    --green-mid:    #2d6a4f;
+    --green-bright: #40916c;
+    --green-light:  #74c69d;
+    --green-pale:   #d8f3dc;
+    --green-ghost:  #f0faf4;
+    --brown-mid:    #7d5a3c;
+    --brown-dark:   #5c3d1e;
+    --brown-light:  #c9a87c;
+    --cream:        #fdf8f0;
+    --white:        #ffffff;
+    --text-dark:    #1a2e22;
+    --text-muted:   #6b8f78;
+    --shadow-card:  0 2px 16px rgba(26,71,49,0.08);
+    --radius-card:  16px;
+  }
+
+  /* ── Page Header ── */
+  .page-header { margin-bottom: 28px; }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.75rem; font-weight: 700;
+    color: var(--green-deep); line-height: 1.2; margin-bottom: 4px;
+  }
+  .page-header p { font-size: .85rem; color: var(--text-muted); }
+
+  /* ── Summary Cards ── */
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 24px;
+  }
+  @media (max-width: 1200px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .stat-card {
+    background: var(--white); border-radius: var(--radius-card);
+    padding: 20px; box-shadow: var(--shadow-card);
+    border: 1px solid rgba(116,198,157,0.15);
+    position: relative; overflow: hidden;
+    transition: box-shadow .2s, transform .2s;
+  }
+  .stat-card:hover { box-shadow: 0 6px 28px rgba(26,71,49,0.12); transform: translateY(-2px); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--green-bright), var(--green-light));
+  }
+  .stat-card.accent-brown::before  { background: linear-gradient(90deg, var(--brown-mid), var(--brown-light)); }
+  .stat-card.accent-deep::before   { background: linear-gradient(90deg, var(--green-deep), var(--green-mid)); }
+  .stat-card.accent-warning::before{ background: linear-gradient(90deg, #b45309, #e09b2d); }
+  .stat-card.accent-danger::before { background: linear-gradient(90deg, #b91c1c, #d94f4f); }
+  .stat-label  { font-size:.72rem; text-transform:uppercase; letter-spacing:.6px; color:var(--text-muted); font-weight:600; margin-bottom:8px; }
+  .stat-value  { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:var(--green-deep); line-height:1; margin-bottom:6px; }
+  .stat-value.danger  { color:#b91c1c; }
+  .stat-value.warning { color:#b45309; }
+  .stat-sub    { font-size:.75rem; color:var(--text-muted); }
+  .stat-icon   { position:absolute; right:18px; top:50%; transform:translateY(-50%); opacity:.07; color:var(--green-deep); }
+
+  /* ── Survival Rate Card ── */
+  .stat-card-survival {
+    background: linear-gradient(135deg, var(--green-deep), var(--green-mid));
+    border-radius: var(--radius-card);
+    padding: 20px; box-shadow: var(--shadow-card);
+    position: relative; overflow: hidden;
+    transition: box-shadow .2s, transform .2s;
+  }
+  .stat-card-survival:hover { box-shadow: 0 6px 28px rgba(26,71,49,0.22); transform: translateY(-2px); }
+  .stat-card-survival::before {
+    content: ''; position: absolute; right: -20px; top: -20px;
+    width: 90px; height: 90px; background: rgba(255,255,255,.06); border-radius: 50%;
+  }
+  .stat-card-survival .stat-label  { color: rgba(255,255,255,.7); }
+  .stat-card-survival .stat-value  { color: var(--green-pale); font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; line-height:1; margin-bottom:6px; }
+  .stat-card-survival .stat-sub    { color: rgba(255,255,255,.6); font-size:.75rem; }
+  .stat-card-survival .stat-icon   { opacity:.1; color:#fff; }
+  .survival-bar-track { height:4px; background:rgba(255,255,255,.15); border-radius:99px; margin-top:14px; overflow:hidden; }
+  .survival-bar-fill  { height:100%; background:linear-gradient(90deg,var(--green-light),var(--green-pale)); border-radius:99px; transition:width 1s cubic-bezier(.4,0,.2,1); width:0%; }
+
+  /* ── Card base ── */
+  .card {
+    background: var(--white); border-radius: var(--radius-card);
+    padding: 22px; box-shadow: var(--shadow-card);
+    border: 1px solid rgba(116,198,157,0.15);
+  }
+  .card-header {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:12px; margin-bottom:4px;
+  }
+  .card-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; color:var(--green-deep); }
+  .card-sub   { font-size:.75rem; color:var(--text-muted); margin-bottom:18px; }
+  .card-link  { font-size:.75rem; font-weight:600; color:var(--green-bright); text-decoration:none; white-space:nowrap; }
+  .card-link:hover { color:var(--green-deep); text-decoration:underline; }
+
+  /* ── Charts layout ── */
+  .charts-row {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:16px; margin-bottom:24px;
+  }
+  @media (max-width: 1100px) { .charts-row { grid-template-columns:1fr; } }
+
+  /* ── Donut Chart ── */
+  .donut-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .donut-svg-wrap { position:relative; width:150px; height:150px; flex-shrink:0; }
+  .donut-center-text { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .donut-center-text strong { font-size:1rem; font-family:'Playfair Display',serif; color:var(--green-deep); display:block; }
+  .donut-center-text span { font-size:.65rem; color:var(--text-muted); text-align:center; line-height:1.3; }
+  .donut-legend { display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; width:100%; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:.72rem; }
+  .legend-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .legend-name { color:var(--text-dark); }
+  .legend-pct  { font-weight:700; color:var(--green-deep); }
+
+  /* ── Bar Chart ── */
+  .bar-chart-wrap {
+    height:180px; display:flex; align-items:flex-end;
+    gap:6px; padding-bottom:24px; position:relative;
+  }
+  .bar-col {
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; height:100%; justify-content:flex-end; position:relative;
+  }
+  .bar-fill {
+    width:100%; border-radius:5px 5px 0 0;
+    background:linear-gradient(180deg,var(--green-bright),var(--green-mid));
+    transition:height .6s cubic-bezier(.34,1.56,.64,1);
+    position:relative; cursor:pointer;
+  }
+  .bar-fill.zero { background:var(--green-pale); }
+  .bar-fill:not(.zero):hover { filter:brightness(1.1); }
+  .bar-fill .bar-tooltip {
+    position:absolute; bottom:calc(100% + 6px); left:50%;
+    transform:translateX(-50%); background:var(--green-deep); color:#fff;
+    font-size:.65rem; font-weight:600; padding:3px 7px; border-radius:5px;
+    white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s; z-index:5;
+  }
+  .bar-fill:hover .bar-tooltip { opacity:1; }
+  .bar-label { font-size:.6rem; color:var(--text-muted); position:absolute; bottom:-18px; text-align:center; width:100%; }
+
+  /* bar monitoring — coklat */
+  .bar-fill-monitoring {
+    width:100%; border-radius:5px 5px 0 0;
+    background:linear-gradient(180deg,var(--brown-mid),var(--brown-dark));
+    transition:height .6s cubic-bezier(.34,1.56,.64,1);
+    position:relative; cursor:pointer;
+  }
+  .bar-fill-monitoring:hover { filter:brightness(1.15); }
+  .bar-fill-monitoring .bar-tooltip {
+    position:absolute; bottom:calc(100% + 6px); left:50%;
+    transform:translateX(-50%); background:var(--brown-dark); color:var(--cream);
+    font-size:.65rem; font-weight:600; padding:3px 7px; border-radius:5px;
+    white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s; z-index:5;
+  }
+  .bar-fill-monitoring:hover .bar-tooltip { opacity:1; }
+
+  /* ── 2-col bottom row ── */
+  .bottom-row {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:16px; margin-bottom:24px;
+  }
+  @media (max-width:900px) { .bottom-row { grid-template-columns:1fr; } }
+
+  /* ── Mini Table ── */
+  .mini-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+  .mini-table th { text-align:left; padding:7px 10px; font-size:.68rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--text-muted); border-bottom:1.5px solid var(--green-pale); }
+  .mini-table td { padding:9px 10px; border-bottom:1px solid rgba(116,198,157,0.12); color:var(--text-dark); vertical-align:middle; }
+  .mini-table tr:last-child td { border-bottom:none; }
+  .mini-table tr:hover td { background:var(--green-ghost); }
+
+  /* ── Badges ── */
+  .badge { display:inline-flex; align-items:center; padding:2px 9px; border-radius:20px; font-size:.67rem; font-weight:600; letter-spacing:.3px; }
+  .badge-hidup    { background:var(--green-pale); color:var(--green-deep); }
+  .badge-mati     { background:#fce8e8; color:#b03030; }
+  .badge-menunggu { background:#fff8ec; color:var(--brown-mid); }
+  .badge-disetujui{ background:var(--green-pale); color:var(--green-deep); }
+  .badge-ditolak  { background:#fce8e8; color:#b03030; }
+
+  /* ── ID chip ── */
+  .id-chip {
+    font-size:.72rem; background:var(--green-ghost); color:var(--green-mid);
+    padding:2px 7px; border-radius:5px; font-weight:600;
+  }
+
+  /* ── Tahap chip ── */
+  .tahap-chip {
+    font-size:.7rem; background:rgba(116,198,157,0.15); color:var(--green-mid);
+    padding:2px 8px; border-radius:20px; font-weight:600;
+  }
+
+  /* ── Misc ── */
+  .empty-state { text-align:center; padding:28px 0; color:var(--text-muted); font-size:.8rem; }
+</style>
+
+<!-- ═══ PAGE HEADER ═══ -->
+<div class="page-header">
+  <h1>Selamat datang, <%= user.nama_lengkap.split(' ')[0] %> 👋</h1>
+  <p>Ringkasan operasional penanaman & monitoring wilayah Anda</p>
+</div>
+
+<!-- ═══ SUMMARY CARDS — Baris 1 ═══ -->
+<div class="summary-grid">
+
+  <div class="stat-card">
+    <div class="stat-label">Total Program</div>
+    <div class="stat-value"><%= totalProgram.toLocaleString('id-ID') %></div>
+    <div class="stat-sub">Program selesai di wilayah</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="16 7 22 7 22 13" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Total Penanaman</div>
+    <div class="stat-value"><%= totalPenanaman.toLocaleString('id-ID') %></div>
+    <div class="stat-sub">Sesi penanaman terdaftar</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="32,4 44,22 38,22 50,40 41,40 54,58 10,58 23,40 14,40 26,22 20,22"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card accent-brown">
+    <div class="stat-label">Total Pohon</div>
+    <div class="stat-value"><%= totalPohon.toLocaleString('id-ID') %></div>
+    <div class="stat-sub"><%= hidup.toLocaleString('id-ID') %> pohon hidup termonitor</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <path d="M12 22V12M12 12C12 7 7 3 3 5c0 4 3 7 9 7zM12 12c0-5 5-9 9-7-1 4-4 7-9 7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card-survival">
+    <div class="stat-label">Survival Rate</div>
+    <div class="stat-value"><%= survivalRate %>%</div>
+    <div class="stat-sub"><%= hidup %> hidup dari <%= hidup + mati %> termonitor</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="16 7 22 7 22 13" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="survival-bar-track">
+      <div class="survival-bar-fill" id="survivalBar"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ SUMMARY CARDS — Baris 2 ═══ -->
+<div class="summary-grid">
+
+  <div class="stat-card accent-warning">
+    <div class="stat-label">Pohon Pending</div>
+    <div class="stat-value warning"><%= pohonPending.toLocaleString('id-ID') %></div>
+    <div class="stat-sub">Menunggu verifikasi Anda</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card accent-danger">
+    <div class="stat-label">Monitoring Pending</div>
+    <div class="stat-value danger"><%= monitoringPending.toLocaleString('id-ID') %></div>
+    <div class="stat-sub">Laporan belum diverifikasi</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card accent-deep">
+    <div class="stat-label">Mitra Aktif</div>
+    <div class="stat-value"><%= totalMitraAktif.toLocaleString('id-ID') %></div>
+    <div class="stat-sub">Mitra terlibat di wilayah</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <circle cx="9" cy="7" r="3"/>
+        <path d="M3 21v-2a5 5 0 0 1 5-5h2" stroke-linecap="round"/>
+        <circle cx="17" cy="9" r="2.5"/>
+        <path d="M13 21v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Pohon Hidup</div>
+    <div class="stat-value"><%= hidup.toLocaleString('id-ID') %></div>
+    <div class="stat-sub"><%= mati.toLocaleString('id-ID') %> pohon mati termonitor</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="32,4 44,22 38,22 50,40 41,40 54,58 10,58 23,40 14,40 26,22 20,22"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ CHARTS ROW: Status Verifikasi + Jenis Pohon ═══ -->
+<div class="charts-row">
+
+  <!-- Status Verifikasi Pohon — Donut -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Status Verifikasi Pohon</div>
+        <div class="card-sub" style="margin-bottom:0;">Komposisi status verifikasi seluruh pohon</div>
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <%
+        const verifikasiColors = { terverifikasi: '#40916c', menunggu: '#7d5a3c', ditolak: '#b03030' };
+        const verifikasiTotal  = verifikasiPohon.reduce((s, v) => s + Number(v.total || 0), 0) || 1;
+        const verifikasiColorArr = ['#40916c','#7d5a3c','#b03030','#74c69d','#c9a87c'];
+      %>
+      <div class="donut-wrap">
+        <div class="donut-svg-wrap">
+          <svg viewBox="0 0 36 36" width="150" height="150">
+            <%
+              let vOffset = 25;
+              verifikasiPohon.forEach((item, idx) => {
+                const val     = Number(item.total || 0);
+                const pct     = (val / verifikasiTotal) * 100;
+                const dashArr = pct + ' ' + (100 - pct);
+                const color   = verifikasiColorArr[idx % verifikasiColorArr.length];
+            %>
+              <circle cx="18" cy="18" r="15.91549" fill="transparent"
+                stroke="<%= color %>" stroke-width="5"
+                stroke-dasharray="<%= dashArr %>"
+                stroke-dashoffset="<%= vOffset %>"/>
+            <%
+                vOffset = vOffset - pct;
+                if (vOffset < 0) vOffset += 100;
+              });
+            %>
+            <circle cx="18" cy="18" r="12" fill="#fff"/>
+          </svg>
+          <div class="donut-center-text">
+            <strong><%= verifikasiTotal.toLocaleString('id-ID') %></strong>
+            <span>Total<br/>Pohon</span>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <% verifikasiPohon.forEach((item, idx) => { %>
+            <%
+              const val  = Number(item.total || 0);
+              const pct2 = ((val / verifikasiTotal) * 100).toFixed(1);
+              const labelMap = { terverifikasi: 'Terverifikasi', menunggu: 'Menunggu', ditolak: 'Ditolak' };
+            %>
+            <div class="legend-item" title="<%= item.status_verifikasi %> — <%= pct2 %>%">
+              <div class="legend-dot" style="background:<%= verifikasiColorArr[idx % verifikasiColorArr.length] %>"></div>
+              <span class="legend-name"><%= labelMap[item.status_verifikasi] || item.status_verifikasi %></span>
+              <span class="legend-pct"><%= pct2 %>%</span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jenis Pohon — Donut -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Sebaran Jenis Pohon</div>
+        <div class="card-sub" style="margin-bottom:0;">Komposisi jenis pohon yang ditanam</div>
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <%
+        const donutColors = ['#40916c','#2d6a4f','#74c69d','#7d5a3c','#1a4731','#d8f3dc','#5c3d1e'];
+        const donutTotal  = jenisPohonChart.reduce((s, j) => s + Number(j.total || 0), 0) || 1;
+      %>
+      <div class="donut-wrap">
+        <div class="donut-svg-wrap">
+          <svg viewBox="0 0 36 36" width="150" height="150">
+            <%
+              let dOffset = 25;
+              jenisPohonChart.slice(0,7).forEach((item, idx) => {
+                const val     = Number(item.total || 0);
+                const pct     = (val / donutTotal) * 100;
+                const dashArr = pct + ' ' + (100 - pct);
+                const color   = donutColors[idx % donutColors.length];
+            %>
+              <circle cx="18" cy="18" r="15.91549" fill="transparent"
+                stroke="<%= color %>" stroke-width="5"
+                stroke-dasharray="<%= dashArr %>"
+                stroke-dashoffset="<%= dOffset %>"/>
+            <%
+                dOffset = dOffset - pct;
+                if (dOffset < 0) dOffset += 100;
+              });
+            %>
+            <circle cx="18" cy="18" r="12" fill="#fff"/>
+          </svg>
+          <div class="donut-center-text">
+            <strong><%= donutTotal.toLocaleString('id-ID') %></strong>
+            <span>Total<br/>Pohon</span>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <% jenisPohonChart.slice(0,7).forEach((item, idx) => { %>
+            <%
+              const val  = Number(item.total || 0);
+              const pct2 = ((val / donutTotal) * 100).toFixed(1);
+            %>
+            <div class="legend-item" title="<%= item.nama_pohon %> — <%= pct2 %>%">
+              <div class="legend-dot" style="background:<%= donutColors[idx % donutColors.length] %>"></div>
+              <span class="legend-name"><%= item.nama_pohon %></span>
+              <span class="legend-pct"><%= pct2 %>%</span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ PROGRESS MONITORING PER TAHAP ═══ -->
+<div class="card" style="margin-bottom:24px;">
+  <div class="card-header" style="margin-bottom:12px; align-items:center;">
+    <div>
+      <div class="card-title">Progress Monitoring per Tahap</div>
+      <div class="card-sub" style="margin-bottom:0;">Jumlah pohon yang masuk tiap tahap monitoring</div>
+    </div>
+  </div>
+  <% if (!monitoringTahap || monitoringTahap.length === 0) { %>
+    <div class="empty-state">Belum ada data monitoring.</div>
+  <% } else { %>
+    <%
+      const maxMonitoring = Math.max(...monitoringTahap.map(m => Number(m.total || 0)), 1);
+    %>
+    <div class="bar-chart-wrap" id="barChartMonitoring" style="height:200px; gap:8px;">
+      <% monitoringTahap.forEach((item) => { %>
+        <%
+          const total = Number(item.total || 0);
+          const pct   = Math.round((total / maxMonitoring) * 100);
+          const h     = total > 0 ? Math.max(pct, 4) : 3;
+        %>
+        <div class="bar-col">
+          <div class="bar-fill-monitoring" style="height:<%= h %>%;">
+            <span class="bar-tooltip">Tahap <%= item.tahap_monitoring %><br/><%= total.toLocaleString('id-ID') %> pohon</span>
+          </div>
+          <span class="bar-label">T<%= item.tahap_monitoring %></span>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<!-- ═══ BOTTOM ROW: Monitoring Terbaru · Pohon Pending ═══ -->
+<div class="bottom-row">
+
+  <!-- Monitoring Terbaru -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Monitoring Terbaru</div>
+        <div class="card-sub" style="margin-bottom:0;">5 laporan monitoring terakhir</div>
+      </div>
+      <a href="/admin-wilayah/verifikasi-monitoring" class="card-link">Lihat Semua →</a>
+    </div>
+    <% if (!monitoringTerbaru || monitoringTerbaru.length === 0) { %>
+      <div class="empty-state">Belum ada data monitoring.</div>
+    <% } else { %>
+      <table class="mini-table">
+        <thead>
+          <tr><th>ID Pohon</th><th>Tahap</th><th>Status</th><th>Verifikasi</th></tr>
+        </thead>
+        <tbody>
+          <% monitoringTerbaru.forEach(item => { %>
+            <tr>
+              <td><span class="id-chip">#<%= item.id_pohon %></span></td>
+              <td><span class="tahap-chip">Tahap <%= item.monitoring?.tahap_monitoring ?? '—' %></span></td>
+              <td>
+                <span class="badge badge-<%= item.status === 'hidup' ? 'hidup' : 'mati' %>">
+                  <%= item.status === 'hidup' ? 'Hidup' : 'Mati' %>
+                </span>
+              </td>
+              <td>
+                <span class="badge badge-<%= item.status_verifikasi %>">
+                  <%= item.status_verifikasi %>
+                </span>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <!-- Pohon Pending -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Pohon Menunggu Verifikasi</div>
+        <div class="card-sub" style="margin-bottom:0;">Perlu tindakan segera</div>
+      </div>
+      <a href="/admin-wilayah/verifikasi-pohon" class="card-link">Verifikasi →</a>
+    </div>
+    <% if (!pohonPendingList || pohonPendingList.length === 0) { %>
+      <div class="empty-state">✅ Tidak ada pohon yang menunggu verifikasi.</div>
+    <% } else { %>
+      <table class="mini-table">
+        <thead>
+          <tr><th>ID Pohon</th><th>Program</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <% pohonPendingList.forEach(item => { %>
+            <tr>
+              <td><span class="id-chip">#<%= item.id_pohon %></span></td>
+              <td style="font-size:.72rem;color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                  title="<%= item.penanaman?.program?.judul_program || '' %>">
+                <%= item.penanaman?.program?.judul_program || '—' %>
+              </td>
+              <td><span class="badge badge-menunggu">Menunggu</span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+</div>
+
+<script>
+  /* ─── Survival bar animate ─── */
+  (function() {
+    setTimeout(function() {
+      var bar = document.getElementById('survivalBar');
+      if (bar) bar.style.width = '<%= survivalRate %>%';
+    }, 300);
+  })();
+
+  /* ─── Animate bars on load ─── */
+  (function() {
+    document.querySelectorAll('#barChartMonitoring .bar-fill-monitoring').forEach(function(bar, i) {
+      var h = bar.style.height;
+      bar.style.height = '3px';
+      setTimeout(function() { bar.style.height = h; }, 80 + i * 45);
+    });
+  })();
+</script>

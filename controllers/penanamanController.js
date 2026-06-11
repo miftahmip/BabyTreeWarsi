@@ -75,6 +75,7 @@ class PenanamanController {
         data,
         program,
         petugas,
+        activePage: 'penanaman',
         user: req.user
       });
 

@@ -1,0 +1,909 @@
+<% layout('layouts/admin-pusat') %>
+<% locals.activePage = 'dashboard' %>
+<% locals.pageTitle = 'Dashboard Admin Pusat' %>
+
+<style>
+  :root {
+    --green-deep:   #1a4731;
+    --green-mid:    #2d6a4f;
+    --green-bright: #40916c;
+    --green-light:  #74c69d;
+    --green-pale:   #d8f3dc;
+    --green-ghost:  #f0faf4;
+    --brown-mid:    #7d5a3c;
+    --brown-light:  #c9a87c;
+    --cream:        #fdf8f0;
+    --white:        #ffffff;
+    --text-dark:    #1a2e22;
+    --text-muted:   #6b8f78;
+    --shadow-card:  0 2px 16px rgba(26,71,49,0.08);
+    --radius-card:  16px;
+  }
+
+  /* ── Page Header ── */
+  .page-header { margin-bottom: 28px; }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.75rem; font-weight: 700;
+    color: var(--green-deep); line-height: 1.2; margin-bottom: 4px;
+  }
+  .page-header p { font-size: .85rem; color: var(--text-muted); }
+
+  /* ── Summary Cards ── */
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 24px;
+  }
+  @media (max-width: 1200px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .stat-card {
+    background: var(--white); border-radius: var(--radius-card);
+    padding: 20px; box-shadow: var(--shadow-card);
+    border: 1px solid rgba(116,198,157,0.15);
+    position: relative; overflow: hidden;
+    transition: box-shadow .2s, transform .2s;
+  }
+  .stat-card:hover { box-shadow: 0 6px 28px rgba(26,71,49,0.12); transform: translateY(-2px); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--green-bright), var(--green-light));
+  }
+  .stat-card.accent-brown::before { background: linear-gradient(90deg, var(--brown-mid), var(--brown-light)); }
+  .stat-card.accent-deep::before  { background: linear-gradient(90deg, var(--green-deep), var(--green-mid)); }
+  .stat-label  { font-size:.72rem; text-transform:uppercase; letter-spacing:.6px; color:var(--text-muted); font-weight:600; margin-bottom:8px; }
+  .stat-value  { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:var(--green-deep); line-height:1; margin-bottom:6px; }
+  .stat-sub    { font-size:.75rem; color:var(--text-muted); }
+  .stat-icon   { position:absolute; right:18px; top:50%; transform:translateY(-50%); opacity:.07; color:var(--green-deep); }
+
+  /* ── Card base ── */
+  .card {
+    background: var(--white); border-radius: var(--radius-card);
+    padding: 22px; box-shadow: var(--shadow-card);
+    border: 1px solid rgba(116,198,157,0.15);
+  }
+  .card-header {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:12px; margin-bottom:4px;
+  }
+  .card-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; color:var(--green-deep); }
+  .card-sub   { font-size:.75rem; color:var(--text-muted); margin-bottom:18px; }
+
+  /* ── Charts layout ── */
+  .charts-row {
+    display:grid; grid-template-columns:1.6fr 1fr;
+    gap:16px; margin-bottom:24px;
+  }
+  @media (max-width: 1100px) { .charts-row { grid-template-columns:1fr; } }
+
+  /* ── Tahun Picker (dropdown list) ── */
+  .tahun-filter-wrap { position:relative; flex-shrink:0; }
+  .tahun-display-btn {
+    display:flex; align-items:center; gap:6px;
+    padding:5px 12px; border-radius:8px; cursor:pointer;
+    border:1.5px solid rgba(116,198,157,0.4);
+    background:var(--green-ghost); font-family:'DM Sans',sans-serif;
+    font-size:.82rem; font-weight:600; color:var(--green-deep);
+    transition:border-color .2s, background .2s; user-select:none;
+  }
+  .tahun-display-btn:hover { border-color:var(--green-bright); background:#fff; }
+  .tahun-display-btn svg { transition:transform .2s; }
+  .tahun-filter-wrap.open .tahun-display-btn svg { transform:rotate(180deg); }
+  .tahun-dropdown {
+    position:absolute; top:calc(100% + 6px); right:0;
+    background:#fff; border:1px solid rgba(116,198,157,0.3);
+    border-radius:12px; box-shadow:0 8px 28px rgba(26,71,49,0.13);
+    padding:6px; min-width:100px; z-index:30;
+    opacity:0; transform:translateY(-6px) scale(.97);
+    pointer-events:none; transition:opacity .18s, transform .18s;
+    max-height:220px; overflow-y:auto;
+  }
+  .tahun-filter-wrap.open .tahun-dropdown {
+    opacity:1; transform:translateY(0) scale(1); pointer-events:all;
+  }
+  .tahun-option {
+    padding:7px 14px; border-radius:7px; font-size:.82rem;
+    font-weight:500; color:var(--text-dark); cursor:pointer;
+    transition:background .15s; text-align:center;
+  }
+  .tahun-option:hover  { background:var(--green-ghost); }
+  .tahun-option.active { background:var(--green-pale); color:var(--green-deep); font-weight:700; }
+
+  /* ── Bar Chart shared styles ── */
+  .bar-chart-wrap {
+    height:180px; display:flex; align-items:flex-end;
+    gap:6px; padding-bottom:24px; position:relative;
+  }
+  .bar-col {
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; height:100%; justify-content:flex-end; position:relative;
+  }
+  .bar-fill {
+    width:100%; border-radius:5px 5px 0 0;
+    background:linear-gradient(180deg,var(--green-bright),var(--green-mid));
+    transition:height .6s cubic-bezier(.34,1.56,.64,1);
+    position:relative; cursor:pointer;
+  }
+  .bar-fill.zero { background:var(--green-pale); }
+  .bar-fill:not(.zero):hover { filter:brightness(1.1); }
+  .bar-fill .bar-tooltip {
+    position:absolute; bottom:calc(100% + 6px); left:50%;
+    transform:translateX(-50%); background:var(--green-deep); color:#fff;
+    font-size:.65rem; font-weight:600; padding:3px 7px; border-radius:5px;
+    white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s; z-index:5;
+  }
+  .bar-fill:hover .bar-tooltip { opacity:1; }
+  .bar-label { font-size:.6rem; color:var(--text-muted); position:absolute; bottom:-18px; text-align:center; width:100%; }
+
+  /* wilayah bar — coklat sesuai tema */
+  .bar-fill-wilayah {
+    width:100%; border-radius:5px 5px 0 0;
+    background:linear-gradient(180deg,var(--brown-mid),var(--brown-dark, #5c3d1e));
+    transition:height .6s cubic-bezier(.34,1.56,.64,1);
+    position:relative; cursor:pointer;
+  }
+  .bar-fill-wilayah:hover { filter:brightness(1.15); }
+  .bar-fill-wilayah .bar-tooltip {
+    position:absolute; bottom:calc(100% + 6px); left:50%;
+    transform:translateX(-50%); background:#5c3d1e; color:var(--cream);
+    font-size:.65rem; font-weight:600; padding:3px 7px; border-radius:5px;
+    white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s; z-index:5;
+  }
+  .bar-fill-wilayah:hover .bar-tooltip { opacity:1; }
+
+  /* ── Donut Chart ── */
+  .donut-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .donut-svg-wrap { position:relative; width:150px; height:150px; flex-shrink:0; }
+  .donut-center-text { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .donut-center-text strong { font-size:1rem; font-family:'Playfair Display',serif; color:var(--green-deep); display:block; }
+  .donut-center-text span { font-size:.65rem; color:var(--text-muted); text-align:center; line-height:1.3; }
+  .donut-legend { display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; width:100%; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:.72rem; }
+  .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .legend-name { color:var(--text-dark); }
+  .legend-pct { font-weight:700; color:var(--green-deep); }
+
+  /* ── Filter Icon Button ── */
+  .btn-filter-icon {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 14px; border-radius:8px; cursor:pointer;
+    border:1.5px solid rgba(116,198,157,0.4);
+    background:var(--green-ghost); font-family:'DM Sans',sans-serif;
+    font-size:.82rem; font-weight:600; color:var(--green-deep);
+    transition:border-color .2s, background .2s;
+  }
+  .btn-filter-icon:hover { border-color:var(--green-bright); background:#fff; }
+  .btn-filter-icon.has-filter { background:var(--green-pale); border-color:var(--green-bright); }
+  .filter-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:16px; height:16px; border-radius:50%; background:var(--green-deep);
+    color:#fff; font-size:.6rem; font-weight:700;
+  }
+
+  /* ── Filter Popup Overlay ── */
+  .filter-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.35);
+    z-index:100; opacity:0; pointer-events:none;
+    transition:opacity .2s;
+  }
+  .filter-overlay.open { opacity:1; pointer-events:all; }
+
+  /* ── Filter Popup Panel ── */
+  .filter-popup {
+    position:fixed; top:50%; left:50%; transform:translate(-50%, -48%) scale(.96);
+    background:#fff; border-radius:18px; box-shadow:0 16px 48px rgba(26,71,49,0.18);
+    padding:28px; width:min(480px, 92vw); z-index:101;
+    opacity:0; pointer-events:none;
+    transition:opacity .22s, transform .22s;
+  }
+  .filter-overlay.open .filter-popup {
+    opacity:1; pointer-events:all; transform:translate(-50%, -50%) scale(1);
+  }
+  .filter-popup-header {
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;
+  }
+  .filter-popup-title {
+    font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:var(--green-deep);
+    display:flex; align-items:center; gap:8px;
+  }
+  .btn-close-popup {
+    width:30px; height:30px; border-radius:50%; border:none; background:var(--green-ghost);
+    color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:1rem; transition:background .15s;
+  }
+  .btn-close-popup:hover { background:var(--green-pale); color:var(--green-deep); }
+  .filter-popup-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;
+  }
+  @media (max-width:480px) { .filter-popup-grid { grid-template-columns:1fr; } }
+  .fp-group { display:flex; flex-direction:column; gap:4px; }
+  .fp-group label { font-size:.68rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; }
+  .fp-group select {
+    padding:8px 12px; border:1.5px solid rgba(116,198,157,0.35); border-radius:10px;
+    font-family:'DM Sans',sans-serif; font-size:.82rem; color:var(--text-dark);
+    background:var(--green-ghost); outline:none; appearance:none; cursor:pointer;
+    transition:border-color .2s, background .2s;
+  }
+  .fp-group select:focus { border-color:var(--green-bright); background:#fff; }
+  .fp-group select:disabled { opacity:.45; cursor:not-allowed; }
+  .filter-popup-actions { display:flex; gap:8px; justify-content:flex-end; }
+  .btn-fp {
+    padding:8px 20px; border-radius:10px; font-size:.82rem; font-weight:600;
+    font-family:'DM Sans',sans-serif; cursor:pointer; border:none; transition:background .2s;
+  }
+  .btn-fp-apply { background:var(--green-deep); color:#fff; }
+  .btn-fp-apply:hover { background:var(--green-mid); }
+  .btn-fp-reset { background:var(--green-ghost); color:var(--green-mid); border:1.5px solid rgba(116,198,157,0.35); text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-fp-reset:hover { background:var(--green-pale); }
+
+  /* wilayah type badge */
+  .wilayah-type-badge {
+    display:inline-flex; align-items:center; padding:2px 10px; border-radius:20px;
+    font-size:.68rem; font-weight:600; background:var(--green-pale); color:var(--green-deep);
+    margin-left:8px; vertical-align:middle;
+  }
+
+  /* ── 3-col bottom row ── */
+  .bottom-row {
+    display:grid; grid-template-columns:1fr 1fr 1.2fr;
+    gap:16px; margin-bottom:24px;
+  }
+  @media (max-width:1150px) { .bottom-row { grid-template-columns:1fr 1fr; } }
+  @media (max-width:780px)  { .bottom-row { grid-template-columns:1fr; } }
+
+  /* ── Mini Table ── */
+  .mini-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+  .mini-table th { text-align:left; padding:7px 10px; font-size:.68rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--text-muted); border-bottom:1.5px solid var(--green-pale); }
+  .mini-table td { padding:9px 10px; border-bottom:1px solid rgba(116,198,157,0.12); color:var(--text-dark); vertical-align:middle; }
+  .mini-table tr:last-child td { border-bottom:none; }
+  .mini-table tr:hover td { background:var(--green-ghost); }
+
+  /* ── Badges ── */
+  .badge { display:inline-flex; align-items:center; padding:2px 9px; border-radius:20px; font-size:.67rem; font-weight:600; letter-spacing:.3px; }
+  .badge-aktif     { background:var(--green-pale); color:var(--green-deep); }
+  .badge-selesai   { background:#e8eef0; color:#4a6572; }
+  .badge-nonaktif  { background:#fce8e8; color:#b03030; }
+  .badge-individual{ background:#fff8ec; color:var(--brown-mid); }
+  .badge-corporate { background:#ecf0ff; color:#3a52b0; }
+
+  /* ── Top Corporate ── */
+  .top-corp-list { display:flex; flex-direction:column; gap:10px; }
+  .corp-item { display:flex; align-items:center; gap:12px; }
+  .corp-rank { width:24px; height:24px; border-radius:50%; background:var(--green-pale); color:var(--green-deep); font-size:.72rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .corp-rank.gold   { background:#fff3cd; color:#8a6400; }
+  .corp-rank.silver { background:#eef0f2; color:#555; }
+  .corp-rank.bronze { background:#fce6d8; color:#8a4000; }
+  .corp-info { flex:1; min-width:0; }
+  .corp-name { font-size:.8rem; font-weight:600; color:var(--text-dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .corp-bar-wrap { height:4px; background:var(--green-pale); border-radius:2px; margin-top:4px; }
+  .corp-bar { height:4px; background:linear-gradient(90deg,var(--green-bright),var(--green-light)); border-radius:2px; }
+  .corp-pohon { font-size:.75rem; font-weight:700; color:var(--green-deep); flex-shrink:0; display:flex; align-items:center; gap:4px; }
+
+  /* ── Donor ── */
+  .donor-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--green-bright),var(--green-deep)); color:#fff; font-size:.65rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .donor-avatar.corp { background:linear-gradient(135deg,#3a52b0,#6a82d0); }
+  .donor-name { font-weight:600; font-size:.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px; }
+
+  /* ── Cemara inline icon ── */
+  .icon-cemara { display:inline-block; vertical-align:middle; }
+
+  /* ── Misc ── */
+  .rp { font-feature-settings:"tnum"; }
+  .empty-state { text-align:center; padding:28px 0; color:var(--text-muted); font-size:.8rem; }
+</style>
+
+<!-- ═══ PAGE HEADER ═══ -->
+<div class="page-header">
+  <h1>Selamat datang, <%= user.nama_lengkap.split(' ')[0] %> 👋</h1>
+  <p>Ringkasan seluruh data program donasi pohon secara nasional</p>
+</div>
+
+<!-- ═══ SUMMARY CARDS ═══ -->
+<div class="summary-grid">
+
+  <div class="stat-card">
+    <div class="stat-label">Total Program</div>
+    <div class="stat-value"><%= totalProgram.toLocaleString('id-ID') %></div>
+    <div class="stat-sub"><%= programAktif %> program aktif</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="16 7 22 7 22 13" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Total Pohon</div>
+    <div class="stat-value"><%= totalPohon.toLocaleString('id-ID') %></div>
+    <div class="stat-sub">Pohon telah ditanam</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="32,4 44,22 38,22 50,40 41,40 54,58 10,58 23,40 14,40 26,22 20,22"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card accent-brown">
+    <div class="stat-label">Total Donatur</div>
+    <div class="stat-value"><%= totalDonatur.toLocaleString('id-ID') %></div>
+    <div class="stat-sub"><%= totalCorporate %> donatur Corporate</div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <circle cx="9" cy="7" r="3"/>
+        <path d="M3 21v-2a5 5 0 0 1 5-5h2" stroke-linecap="round"/>
+        <circle cx="17" cy="9" r="2.5"/>
+        <path d="M13 21v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stat-card accent-deep">
+    <div class="stat-label">Total Seluruh Donasi</div>
+    <div class="stat-value rp" style="font-size:1.3rem;padding-top:4px;">
+      <%
+        var _dana = totalDanaNasional;
+        var _danaStr;
+        if (_dana >= 1000000000) {
+          var _m = _dana / 1000000000;
+          _danaStr = 'Rp ' + (_m % 1 === 0 ? _m.toLocaleString('id-ID') : parseFloat(_m.toFixed(2)).toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2})) + ' M';
+        } else if (_dana >= 1000000) {
+          var _j = _dana / 1000000;
+          _danaStr = 'Rp ' + (_j % 1 === 0 ? _j.toLocaleString('id-ID') : parseFloat(_j.toFixed(2)).toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2})) + ' Jt';
+        } else if (_dana >= 1000) {
+          var _r = _dana / 1000;
+          _danaStr = 'Rp ' + (_r % 1 === 0 ? _r.toLocaleString('id-ID') : parseFloat(_r.toFixed(2)).toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2})) + ' Rb';
+        } else {
+          _danaStr = 'Rp ' + _dana.toLocaleString('id-ID');
+        }
+      %>
+      <%= _danaStr %>
+    </div>
+    <div class="stat-icon">
+      <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <rect x="2" y="6" width="20" height="14" rx="2"/>
+        <circle cx="12" cy="13" r="3"/>
+        <path d="M2 10h20" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ CHARTS ROW: Donasi Bulanan + Sebaran Jenis Pohon ═══ -->
+<div class="charts-row">
+
+  <!-- Donasi Bulanan — filter tahun sebagai dropdown popup -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Donasi Bulanan</div>
+        <div class="card-sub" style="margin-bottom:0;">Total dana terkumpul per bulan</div>
+      </div>
+
+      <!-- Tahun Picker -->
+      <div class="tahun-filter-wrap" id="tahunWrap">
+        <div class="tahun-display-btn" onclick="toggleTahunDropdown()">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/>
+          </svg>
+          <span id="tahunLabel"><%= tahun %></span>
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="tahun-dropdown" id="tahunDropdown">
+          <!-- diisi JS dari rentang tahun DB -->
+        </div>
+      </div>
+      <!-- form hidden untuk submit tahun -->
+      <form id="tahunForm" method="GET" action="/admin-pusat/dashboard" style="display:none;">
+        <% if (selectedProvinsi) { %><input type="hidden" name="kode_provinsi" value="<%= selectedProvinsi %>"><% } %>
+        <% if (selectedKota) { %><input type="hidden" name="kode_kbp_kota" value="<%= selectedKota %>"><% } %>
+        <% if (selectedKecamatan) { %><input type="hidden" name="kode_kecamatan" value="<%= selectedKecamatan %>"><% } %>
+        <% if (selectedKelurahan) { %><input type="hidden" name="kode_kelurahan" value="<%= selectedKelurahan %>"><% } %>
+        <input type="hidden" name="tahun" id="tahunInput" value="<%= tahun %>">
+      </form>
+    </div>
+
+    <div style="margin-top:18px;">
+      <%
+        const maxDonasi = Math.max(...donasiBulanan.map(d => d.total), 1);
+      %>
+      <div class="bar-chart-wrap" id="barChartDonasi">
+        <% donasiBulanan.forEach((item) => { %>
+          <%
+            const pct = Math.round((item.total / maxDonasi) * 100);
+            const h   = item.total > 0 ? Math.max(pct, 4) : 3;
+          %>
+          <div class="bar-col">
+            <div class="bar-fill <%= item.total === 0 ? 'zero' : '' %>"
+                 style="height:<%= h %>%;">
+              <% if (item.total > 0) { %>
+              <span class="bar-tooltip" data-value="<%= item.total %>"></span>
+              <% } %>
+            </div>
+            <span class="bar-label"><%= item.bulan %></span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sebaran Jenis Pohon Donut -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Sebaran Jenis Pohon</div>
+        <div class="card-sub" style="margin-bottom:0;">Komposisi jenis pohon yang ditanam</div>
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <%
+        const donutColors = ['#40916c','#74c69d','#1a4731','#2d6a4f','#b7e4c7','#52b788','#a7c957'];
+        const donutTotal  = jenisPohonChart.reduce((s,j) => s + Number(j.dataValues?.total || j.total || 0), 0) || 1;
+      %>
+      <div class="donut-wrap">
+        <div class="donut-svg-wrap">
+          <svg viewBox="0 0 36 36" width="150" height="150">
+            <%
+              let offset = 25;
+              jenisPohonChart.slice(0,7).forEach((item, idx) => {
+                const val     = Number(item.dataValues?.total || item.total || 0);
+                const pct     = (val / donutTotal) * 100;
+                const dashArr = pct + ' ' + (100 - pct);
+                const color   = donutColors[idx % donutColors.length];
+            %>
+              <circle cx="18" cy="18" r="15.91549" fill="transparent"
+                stroke="<%= color %>" stroke-width="5"
+                stroke-dasharray="<%= dashArr %>"
+                stroke-dashoffset="<%= offset %>"/>
+            <%
+                offset = offset - pct;
+                if (offset < 0) offset += 100;
+              });
+            %>
+            <circle cx="18" cy="18" r="12" fill="#fff"/>
+          </svg>
+          <div class="donut-center-text">
+            <strong><%= donutTotal.toLocaleString('id-ID') %></strong>
+            <span>Total<br/>Pohon</span>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <% jenisPohonChart.slice(0,7).forEach((item, idx) => { %>
+            <%
+              const val  = Number(item.dataValues?.total || item.total || 0);
+              const pct2 = ((val / donutTotal) * 100).toFixed(1);
+            %>
+            <div class="legend-item" title="<%= item.nama_pohon %> — <%= pct2 %>%">
+              <div class="legend-dot" style="background:<%= donutColors[idx % donutColors.length] %>"></div>
+              <span class="legend-name"><%= item.nama_pohon %></span>
+              <span class="legend-pct"><%= pct2 %>%</span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ SEBARAN POHON PER WILAYAH ═══ -->
+<div class="card" style="margin-bottom:24px;">
+  <div class="card-header" style="margin-bottom:12px; align-items:center;">
+    <div>
+      <div class="card-title">
+        Sebaran Pohon per Wilayah
+        <span class="wilayah-type-badge">
+          per <%= wilayahType === 'provinsi' ? 'Provinsi' : wilayahType === 'kabupaten' ? 'Kabupaten/Kota' : wilayahType === 'kecamatan' ? 'Kecamatan' : 'Kelurahan' %>
+        </span>
+      </div>
+      <div class="card-sub" style="margin-bottom:0;">
+        <% if (selectedProvinsi) { %>
+          Filter aktif:
+          <strong style="color:var(--green-deep);">
+            <%= provinces.find(p => p.code == selectedProvinsi)?.name || selectedProvinsi %>
+          </strong>
+          <% if (selectedKota) { %>
+            &rsaquo; <strong style="color:var(--green-deep);"><%= regencies.find(r => r.code == selectedKota)?.name || selectedKota %></strong>
+          <% } %>
+          <% if (selectedKecamatan) { %>
+            &rsaquo; <strong style="color:var(--green-deep);"><%= districts.find(d => d.code == selectedKecamatan)?.name || selectedKecamatan %></strong>
+          <% } %>
+          <% if (selectedKelurahan) { %>
+            &rsaquo; <strong style="color:var(--green-deep);"><%= villages.find(v => v.code == selectedKelurahan)?.name || selectedKelurahan %></strong>
+          <% } %>
+        <% } else { %>
+          Distribusi jumlah pohon — klik Filter untuk persempit wilayah
+        <% } %>
+      </div>
+    </div>
+    <button class="btn-filter-icon <%= selectedProvinsi ? 'has-filter' : '' %>" onclick="openFilterPopup()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+        <path d="M3 6h18M7 12h10M11 18h2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Filter
+      <% const filterCount = [selectedProvinsi, selectedKota, selectedKecamatan, selectedKelurahan].filter(Boolean).length; %>
+      <% if (filterCount > 0) { %><span class="filter-badge"><%= filterCount %></span><% } %>
+    </button>
+  </div>
+
+  <!-- Filter Popup Overlay -->
+  <div class="filter-overlay" id="filterOverlay" onclick="handleOverlayClick(event)">
+    <div class="filter-popup" id="filterPopup">
+      <div class="filter-popup-header">
+        <div class="filter-popup-title">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 6h18M7 12h10M11 18h2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Filter Wilayah
+        </div>
+        <button class="btn-close-popup" onclick="closeFilterPopup()">✕</button>
+      </div>
+      <form method="GET" action="/admin-pusat/dashboard" id="wilayahForm">
+        <input type="hidden" name="tahun" value="<%= tahun %>">
+        <div class="filter-popup-grid">
+          <div class="fp-group">
+            <label>Provinsi</label>
+            <select name="kode_provinsi" id="fpProvinsi">
+              <option value="">Semua Provinsi</option>
+              <% provinces.forEach(p => { %>
+                <option value="<%= p.code %>" <%= selectedProvinsi == p.code ? 'selected' : '' %>><%= p.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="fp-group">
+            <label>Kota / Kabupaten</label>
+            <select name="kode_kbp_kota" id="fpKota" data-placeholder="Semua Kota" <%= !selectedProvinsi ? 'disabled' : '' %>>
+              <option value="">Semua Kota</option>
+              <% regencies.forEach(r => { %>
+                <option value="<%= r.code %>" <%= selectedKota == r.code ? 'selected' : '' %>><%= r.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="fp-group">
+            <label>Kecamatan</label>
+            <select name="kode_kecamatan" id="fpKecamatan" data-placeholder="Semua Kecamatan" <%= !selectedKota ? 'disabled' : '' %>>
+              <option value="">Semua Kecamatan</option>
+              <% districts.forEach(d => { %>
+                <option value="<%= d.code %>" <%= selectedKecamatan == d.code ? 'selected' : '' %>><%= d.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="fp-group">
+            <label>Kelurahan</label>
+            <select name="kode_kelurahan" id="fpKelurahan" data-placeholder="Semua Kelurahan" <%= !selectedKecamatan ? 'disabled' : '' %>>
+              <option value="">Semua Kelurahan</option>
+              <% villages.forEach(v => { %>
+                <option value="<%= v.code %>" <%= selectedKelurahan == v.code ? 'selected' : '' %>><%= v.name %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+        <div class="filter-popup-actions">
+          <a href="/admin-pusat/dashboard?tahun=<%= tahun %>" class="btn-fp btn-fp-reset">Reset</a>
+          <button type="submit" class="btn-fp btn-fp-apply">Terapkan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bar chart wilayah -->
+  <% if (!wilayahChart || wilayahChart.length === 0) { %>
+    <div class="empty-state">Belum ada data sebaran wilayah.</div>
+  <% } else { %>
+    <%
+      const maxWilayah  = Math.max(...wilayahChart.map(w => w.total), 1);
+      const topWilayah  = [...wilayahChart].sort((a,b) => b.total - a.total).slice(0, 12);
+    %>
+    <div class="bar-chart-wrap" id="barChartWilayah" style="height:200px; gap:8px;">
+      <% topWilayah.forEach((item) => { %>
+        <%
+          const pct = Math.round((item.total / maxWilayah) * 100);
+          const h   = item.total > 0 ? Math.max(pct, 4) : 3;
+          const namaShort = (item.wilayah || '-').replace(/^(KABUPATEN |KOTA |KEC\. )/i, '');
+        %>
+        <div class="bar-col">
+          <div class="bar-fill-wilayah" style="height:<%= h %>%;">
+            <span class="bar-tooltip">
+              <%= item.wilayah || '-' %><br/>
+              <svg class="icon-cemara" width="9" height="9" viewBox="0 0 64 64" fill="#fff" xmlns="http://www.w3.org/2000/svg" style="margin-right:2px;">
+                <polygon points="32,4 44,22 38,22 50,40 41,40 54,58 10,58 23,40 14,40 26,22 20,22"/>
+              </svg>
+              <%= item.total.toLocaleString('id-ID') %> pohon
+            </span>
+          </div>
+          <span class="bar-label" style="font-size:.55rem;white-space:nowrap;overflow:hidden;max-width:100%;text-overflow:ellipsis;">
+            <%= namaShort.length > 8 ? namaShort.slice(0,7)+'…' : namaShort %>
+          </span>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<!-- ═══ BOTTOM ROW: Top Korporat · Program Terbaru · Donasi Terbaru ═══ -->
+<div class="bottom-row">
+
+  <!-- Top 5 Korporat -->
+  <div class="card">
+    <div class="card-title">Top 5 Donatur Corporate</div>
+    <div class="card-sub">Berdasarkan jumlah pohon</div>
+
+    <% if (!topCorporate || topCorporate.length === 0) { %>
+      <div class="empty-state">Belum ada data donatur corporate.</div>
+    <% } else { %>
+      <%
+        const maxPohon  = Math.max(...topCorporate.map(c => Number(c.dataValues?.total_pohon || 0)), 1);
+        const rankClass = ['gold','silver','bronze','',''];
+      %>
+      <div class="top-corp-list">
+        <% topCorporate.forEach((corp, idx) => { %>
+          <%
+            const pohon  = Number(corp.dataValues?.total_pohon || 0);
+            const barPct = Math.round((pohon / maxPohon) * 100);
+            const nama   = corp.user?.nama_lengkap || '-';
+          %>
+          <div class="corp-item">
+            <div class="corp-rank <%= rankClass[idx] %>"><%= idx + 1 %></div>
+            <div class="corp-info">
+              <div class="corp-name"><%= nama %></div>
+              <div class="corp-bar-wrap"><div class="corp-bar" style="width:<%= barPct %>%"></div></div>
+            </div>
+            <div class="corp-pohon">
+              <svg class="icon-cemara" width="12" height="12" viewBox="0 0 64 64" fill="var(--green-bright)" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="32,4 44,22 38,22 50,40 41,40 54,58 10,58 23,40 14,40 26,22 20,22"/>
+              </svg>
+              <%= pohon.toLocaleString('id-ID') %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Program Terbaru -->
+  <div class="card">
+    <div class="card-title">Program Terbaru</div>
+    <div class="card-sub">5 program paling baru dibuat</div>
+
+    <% if (!programTerbaru || programTerbaru.length === 0) { %>
+      <div class="empty-state">Belum ada program.</div>
+    <% } else { %>
+      <table class="mini-table">
+        <thead>
+          <tr><th>Judul</th><th>Provinsi</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <% programTerbaru.forEach(prog => { %>
+            <tr>
+              <td>
+                <div style="font-weight:600;font-size:.78rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= prog.judul_program %>">
+                  <%= prog.judul_program %>
+                </div>
+              </td>
+              <td style="font-size:.72rem;color:var(--text-muted);white-space:nowrap;">
+                <%= prog.nama_provinsi || '-' %>
+              </td>
+              <td><span class="badge badge-<%= prog.status_program %>"><%= prog.status_program %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <!-- Donasi Terbaru -->
+  <div class="card">
+    <div class="card-title">Donasi Terbaru</div>
+    <div class="card-sub">5 transaksi terakhir berhasil</div>
+
+    <% if (!donasiTerbaru || donasiTerbaru.length === 0) { %>
+      <div class="empty-state">Belum ada donasi.</div>
+    <% } else { %>
+      <table class="mini-table">
+        <thead>
+          <tr><th>Donatur</th><th>Program</th><th>Pohon</th><th>Nominal</th></tr>
+        </thead>
+        <tbody>
+          <% donasiTerbaru.forEach(don => { %>
+            <%
+              const isCorpDon = don.user?.role === 'donatur_corporate';
+              const initials  = (don.user?.nama_lengkap || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+            %>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <div class="donor-avatar <%= isCorpDon ? 'corp' : '' %>"><%= initials %></div>
+                  <div>
+                    <div class="donor-name"><%= don.user?.nama_lengkap || '-' %></div>
+                    <span class="badge <%= isCorpDon ? 'badge-corporate' : 'badge-individual' %>" style="font-size:.6rem;padding:1px 5px;">
+                      <%= isCorpDon ? 'Corporate' : 'Individu' %>
+                    </span>
+                  </div>
+                </div>
+              </td>
+              <td style="font-size:.72rem;color:var(--text-muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= don.program?.judul_program || '' %>">
+                <%= don.program?.judul_program || '-' %>
+              </td>
+              <td style="font-weight:600;font-size:.78rem;">
+                <div style="display:flex;align-items:center;gap:3px;">
+                  <svg class="icon-cemara" width="11" height="11" viewBox="0 0 64 64" fill="var(--green-bright)" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="32,4 44,22 38,22 50,40 41,40 54,58 10,58 23,40 14,40 26,22 20,22"/>
+                  </svg>
+                  <%= Number(don.jumlah_pohon).toLocaleString('id-ID') %>
+                </div>
+              </td>
+              <td style="font-weight:600;font-size:.75rem;" class="rp">
+                Rp <%= Number(don.nominal_donasi).toLocaleString('id-ID') %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+</div>
+
+<script>
+  /* ─── Helper: format rupiah tanpa pembulatan ─── */
+  function formatRupiah(angka) {
+    if (angka >= 1000000000) {
+      var miliar = angka / 1000000000;
+      // Tampilkan desimal hanya jika ada sisa yang signifikan
+      return 'Rp ' + (Number.isInteger(miliar) ? miliar.toLocaleString('id-ID') : miliar.toFixed(2).replace(/\.?0+$/, '').replace('.', ',')) + ' M';
+    } else if (angka >= 1000000) {
+      var juta = angka / 1000000;
+      return 'Rp ' + (Number.isInteger(juta) ? juta.toLocaleString('id-ID') : juta.toFixed(2).replace(/\.?0+$/, '').replace('.', ',')) + ' Jt';
+    } else if (angka >= 1000) {
+      var ribu = angka / 1000;
+      return 'Rp ' + (Number.isInteger(ribu) ? ribu.toLocaleString('id-ID') : ribu.toFixed(2).replace(/\.?0+$/, '').replace('.', ',')) + ' Rb';
+    } else {
+      return 'Rp ' + angka.toLocaleString('id-ID');
+    }
+  }
+
+  /* ─── Isi tooltip bar donasi ─── */
+  document.querySelectorAll('#barChartDonasi .bar-tooltip[data-value]').forEach(function(el) {
+    el.textContent = formatRupiah(Number(el.dataset.value));
+  });
+
+  // Ambil tahun minimum dari data donasi bulanan (fallback: 2022)
+  // Gunakan rentang dari tahun pertama di DB hingga tahun sekarang
+  const TAHUN_SEKARANG = new Date().getFullYear();
+  const TAHUN_AKTIF    = parseInt('<%= tahun %>');
+  // Tahun awal: ambil dari data yang ada, default 2022
+  // Bisa disesuaikan jika ada variabel dari controller
+  const TAHUN_AWAL = typeof window.__tahunAwal !== 'undefined' ? window.__tahunAwal : 2022;
+
+  function buildTahunDropdown() {
+    const dd = document.getElementById('tahunDropdown');
+    dd.innerHTML = '';
+    for (let y = TAHUN_SEKARANG; y >= TAHUN_AWAL; y--) {
+      const el = document.createElement('div');
+      el.className = 'tahun-option' + (y === TAHUN_AKTIF ? ' active' : '');
+      el.textContent = y;
+      el.onclick = () => pilihTahun(y);
+      dd.appendChild(el);
+    }
+  }
+
+  function toggleTahunDropdown() {
+    const wrap = document.getElementById('tahunWrap');
+    wrap.classList.toggle('open');
+  }
+
+  function pilihTahun(y) {
+    document.getElementById('tahunLabel').textContent = y;
+    document.getElementById('tahunInput').value = y;
+    document.getElementById('tahunWrap').classList.remove('open');
+    document.getElementById('tahunForm').submit();
+  }
+
+  document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('tahunWrap');
+    if (wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+  });
+
+  buildTahunDropdown();
+
+  /* ─── Filter Popup ─── */
+  function openFilterPopup() {
+    document.getElementById('filterOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFilterPopup() {
+    document.getElementById('filterOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('filterOverlay')) closeFilterPopup();
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeFilterPopup();
+  });
+
+  /* ─── Cascade Dropdown Wilayah ─── */
+  (function() {
+    var selProvinsi  = document.getElementById('fpProvinsi');
+    var selKota      = document.getElementById('fpKota');
+    var selKecamatan = document.getElementById('fpKecamatan');
+    var selKelurahan = document.getElementById('fpKelurahan');
+
+    function resetSelect(sel, placeholder) {
+      sel.innerHTML = '<option value="">' + placeholder + '</option>';
+      sel.disabled = true;
+    }
+
+    function loadOptions(sel, url) {
+      sel.disabled = true;
+      sel.innerHTML = '<option value="">Memuat...</option>';
+      fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var list = Array.isArray(data) ? data : (data.data || []);
+          sel.innerHTML = '<option value="">' + sel.dataset.placeholder + '</option>';
+          list.forEach(function(item) {
+            var opt = document.createElement('option');
+            opt.value = item.code;
+            opt.textContent = item.name;
+            sel.appendChild(opt);
+          });
+          sel.disabled = false;
+        })
+        .catch(function() {
+          sel.innerHTML = '<option value="">' + sel.dataset.placeholder + '</option>';
+          sel.disabled = false;
+        });
+    }
+
+    selProvinsi.addEventListener('change', function() {
+      resetSelect(selKota,      'Semua Kota');
+      resetSelect(selKecamatan, 'Semua Kecamatan');
+      resetSelect(selKelurahan, 'Semua Kelurahan');
+      if (!this.value) return;
+      loadOptions(selKota, '/api/wilayah/regencies/' + this.value);
+    });
+
+    selKota.addEventListener('change', function() {
+      resetSelect(selKecamatan, 'Semua Kecamatan');
+      resetSelect(selKelurahan, 'Semua Kelurahan');
+      if (!this.value) return;
+      loadOptions(selKecamatan, '/api/wilayah/districts/' + this.value);
+    });
+
+    selKecamatan.addEventListener('change', function() {
+      resetSelect(selKelurahan, 'Semua Kelurahan');
+      if (!this.value) return;
+      loadOptions(selKelurahan, '/api/wilayah/villages/' + this.value);
+    });
+
+    // Enable select yang sudah punya data dari server (page load dengan filter aktif)
+    var regenciesCount = <%- regencies  ? regencies.length  : 0 %>;
+    var districtsCount = <%- districts  ? districts.length  : 0 %>;
+    var villagesCount  = <%- villages   ? villages.length   : 0 %>;
+
+    if (regenciesCount > 0) selKota.disabled      = false;
+    if (districtsCount > 0) selKecamatan.disabled = false;
+    if (villagesCount  > 0) selKelurahan.disabled = false;
+  })();
+
+  /* ─── Animate bars on load ─── */
+  /* Script di bawah body — DOM sudah siap, langsung eksekusi tanpa DOMContentLoaded */
+  (function() {
+    document.querySelectorAll('#barChartDonasi .bar-fill:not(.zero)').forEach(function(bar, i) {
+      var h = bar.style.height;
+      bar.style.height = '3px';
+      setTimeout(function() { bar.style.height = h; }, 60 + i * 35);
+    });
+    document.querySelectorAll('#barChartWilayah .bar-fill-wilayah').forEach(function(bar, i) {
+      var h = bar.style.height;
+      bar.style.height = '3px';
+      setTimeout(function() { bar.style.height = h; }, 80 + i * 45);
+    });
+  })();
+</script>

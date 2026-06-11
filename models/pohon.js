@@ -33,6 +33,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'verifikator'
       });
 
+      Pohon.hasMany(models.DonasiPohon, {
+        foreignKey: 'id_pohon',
+        as: 'donasiPohon'
+      });
     }
   }
 

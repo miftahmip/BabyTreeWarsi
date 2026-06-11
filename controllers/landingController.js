@@ -1,4 +1,4 @@
-const { ProgramDonasi } = require('../models');
+const { ProgramDonasi, Pohon, Mitra } = require('../models');
 const WilayahService = require('../services/wilayahService');
 
 class LandingController {
@@ -20,9 +20,26 @@ class LandingController {
                 })
             );
 
+            // Statistik
+            const totalPohon =
+            await Pohon.count();
+
+            const totalPenerimaManfaat =
+            await Mitra.count();
+
+            const totalWilayah =
+            await ProgramDonasi.count({
+                distinct: true,
+                col: 'kode_kelurahan'
+            });
+
             return res.render('landing', {
                 pageTitle: 'Baby Tree - Donasi Pohon',
-                programs: programsWithWilayah
+                programs: programsWithWilayah,
+
+                totalPohon,
+                totalPenerimaManfaat,
+                totalWilayah
             });
 
         } catch (error) {

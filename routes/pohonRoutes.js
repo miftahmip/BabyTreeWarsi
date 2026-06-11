@@ -4,6 +4,21 @@ const PohonController = require('../controllers/pohonController');
 const upload = require('../middlewares/uploadPohonMiddleware');
 const {verifyToken, allowRole} = require('../middlewares/authMiddleware');
 
+// HALAMAN SCAN QR
+router.get(
+  '/petugas-lapangan/pohon/scan',
+  verifyToken,
+  allowRole('petugas_lapangan'),
+  PohonController.scanQRPage
+);
+ 
+// PROSES HASIL SCAN QR (AJAX POST)
+router.post(
+  '/petugas-lapangan/pohon/scan',
+  verifyToken,
+  allowRole('petugas_lapangan'),
+  PohonController.processScanQR
+);
 
 // LIST DATA POHON
 router.get(

@@ -453,6 +453,7 @@
 
     <!-- Form -->
     <form action="/register" method="POST" novalidate>
+      <input type="hidden" name="returnUrl" value="<%= typeof returnUrl !== 'undefined' ? returnUrl : '' %>" />
 
       <!-- ══ PILIHAN TIPE AKUN ══ -->
       <div class="role-section">
@@ -522,7 +523,7 @@
             placeholder="Nama lengkap Anda"
             autocomplete="name"
             required
-            value="<%= typeof formData !== 'undefined' ? formData.nama_lengkap || '' : '' %>"
+            value="<%= typeof formNama !== 'undefined' ? formNama : '' %>"
           />
         </div>
       </div>
@@ -544,7 +545,7 @@
             placeholder="email@example.com"
             autocomplete="email"
             required
-            value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>"
+            value="<%= typeof formEmail !== 'undefined' ? formEmail : '' %>"
           />
         </div>
       </div>
