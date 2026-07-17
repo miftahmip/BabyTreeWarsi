@@ -6,190 +6,181 @@ const fs = require('fs');
 const {deleteFile} = require('../utils/fileHelper');
 
 class PohonController {
+    static async index(req, res) {
 
-// LIST DATA POHON
-static async index(req, res) {
+      try {
 
-  try {
+        const { id_penanaman } =
+          req.params;
 
-    const { id_penanaman } =
-      req.params;
-
-    const penanaman =
-      await Penanaman.findByPk(
-        id_penanaman,
-        {
-          include: [
+        const penanaman =
+          await Penanaman.findByPk(
+            id_penanaman,
             {
-              model: ProgramDonasi,
-              as: 'program'
+              include: [
+                {
+                  model: ProgramDonasi,
+                  as: 'program'
+                }
+              ]
             }
-          ]
-        }
-      );
+          );
 
-    const pohonList =
-      await Pohon.findAll({
+        const pohonList =
+          await Pohon.findAll({
 
-        where: {
-          id_penanaman
-        },
+            where: {
+              id_penanaman
+            },
 
-        include: [
-          {
-            model: JenisPohon,
-            as: 'jenisPohon'
-          },
-          {
-            model: Mitra,
-            as: 'mitra'
-          },
-          {
-            model: DetailMonitoring,
-            as: 'detailMonitoring',
-            attributes: [
-              'status_verifikasi'
-            ],
             include: [
               {
-                model: Monitoring,
-                as: 'monitoring',
+                model: JenisPohon,
+                as: 'jenisPohon'
+              },
+              {
+                model: Mitra,
+                as: 'mitra'
+              },
+              {
+                model: DetailMonitoring,
+                as: 'detailMonitoring',
                 attributes: [
-                  'tahap_monitoring'
+                  'status_verifikasi'
+                ],
+                include: [
+                  {
+                    model: Monitoring,
+                    as: 'monitoring',
+                    attributes: [
+                      'tahap_monitoring'
+                    ]
+                  }
                 ]
               }
-            ]
+            ],
+
+            order: [['createdAt', 'DESC']]
+          });
+
+        const data = pohonList.map(pohon => {
+
+          const monList =
+            pohon.detailMonitoring || [];
+
+          const monAsli = monList.filter(m => {
+            if (m.status_verifikasi !== 'disetujui')
+              return true;
+            return true;
+          });
+
+          const monSorted = [...monAsli].sort((a, b) => {
+            const tA =
+              Number(a.monitoring?.tahap_monitoring || 0);
+            const tB =
+              Number(b.monitoring?.tahap_monitoring || 0);
+            return tB - tA;
+          });
+
+          let overallStatus  = pohon.status_verifikasi;
+          let overallTahap   = null;
+
+          const monRevisi = monSorted.find(
+            m => m.status_verifikasi === 'revisi'
+          );
+          const monMenunggu = monSorted.find(
+            m => m.status_verifikasi === 'menunggu'
+          );
+
+          if (monRevisi) {
+
+            overallStatus = 'revisi';
+            overallTahap  =
+              `Monitoring ${monRevisi.monitoring?.tahap_monitoring}`;
+
+          } else if (monMenunggu) {
+
+            overallStatus = 'menunggu';
+            overallTahap  =
+              `Monitoring ${monMenunggu.monitoring?.tahap_monitoring}`;
+
+          } else if (
+            pohon.status_verifikasi === 'revisi'
+          ) {
+
+            overallStatus = 'revisi';
+            overallTahap  = 'Data Penanaman';
+
+          } else if (
+            pohon.status_verifikasi === 'menunggu'
+          ) {
+
+            overallStatus = 'menunggu';
+            overallTahap  = 'Data Penanaman';
+
+          } else if (
+            pohon.status_verifikasi === 'disetujui' &&
+            monList.length === 0
+          ) {
+
+            overallStatus = 'disetujui';
+            overallTahap  = 'Data Penanaman';
+
+          } else if (
+            pohon.status_verifikasi === 'disetujui' &&
+            monList.length > 0
+          ) {
+
+            const monDisetujui = monSorted.find(
+              m => m.status_verifikasi === 'disetujui'
+            );
+
+            overallStatus = 'disetujui';
+            overallTahap  = monDisetujui
+              ? `Monitoring ${monDisetujui.monitoring?.tahap_monitoring}`
+              : 'Data Penanaman';
+
           }
-        ],
 
-        order: [['createdAt', 'DESC']]
-      });
+          return {
+            ...pohon.toJSON(),
+            overallStatus,
+            overallTahap
+          };
 
-    const data = pohonList.map(pohon => {
+        });
 
-      const monList =
-        pohon.detailMonitoring || [];
+        const jenisPohon =
+          await JenisPohon.findAll({
+            order: [['nama_pohon', 'ASC']]
+          });
 
-      // Hanya ambil monitoring non-auto-generated
-      // (auto-generated: status mati + disetujui + foto kosong)
-      const monAsli = monList.filter(m => {
-        if (m.status_verifikasi !== 'disetujui')
-          return true;
-        // kalau disetujui, masih bisa asli
-        // — biarkan masuk, tidak ada foto di sini
-        // jadi cukup sertakan semua non-auto
-        return true;
-      });
+        const mitra =
+          await Mitra.findAll({
+            order: [['nama_mitra', 'ASC']]
+          });
 
-      // Urutkan berdasarkan tahap_monitoring (tertinggi duluan)
-      const monSorted = [...monAsli].sort((a, b) => {
-        const tA =
-          Number(a.monitoring?.tahap_monitoring || 0);
-        const tB =
-          Number(b.monitoring?.tahap_monitoring || 0);
-        return tB - tA;
-      });
-
-      let overallStatus  = pohon.status_verifikasi;
-      let overallTahap   = null; // label sub-badge
-
-      // Cek dari tahap tertinggi ke terendah
-      const monRevisi = monSorted.find(
-        m => m.status_verifikasi === 'revisi'
-      );
-      const monMenunggu = monSorted.find(
-        m => m.status_verifikasi === 'menunggu'
-      );
-
-      if (monRevisi) {
-
-        overallStatus = 'revisi';
-        overallTahap  =
-          `Monitoring ${monRevisi.monitoring?.tahap_monitoring}`;
-
-      } else if (monMenunggu) {
-
-        overallStatus = 'menunggu';
-        overallTahap  =
-          `Monitoring ${monMenunggu.monitoring?.tahap_monitoring}`;
-
-      } else if (
-        pohon.status_verifikasi === 'revisi'
-      ) {
-
-        overallStatus = 'revisi';
-        overallTahap  = 'Data Penanaman';
-
-      } else if (
-        pohon.status_verifikasi === 'menunggu'
-      ) {
-
-        overallStatus = 'menunggu';
-        overallTahap  = 'Data Penanaman';
-
-      } else if (
-        pohon.status_verifikasi === 'disetujui' &&
-        monList.length === 0
-      ) {
-
-        overallStatus = 'disetujui';
-        overallTahap  = 'Data Penanaman';
-
-      } else if (
-        pohon.status_verifikasi === 'disetujui' &&
-        monList.length > 0
-      ) {
-
-        // Cari tahap monitoring tertinggi yang disetujui
-        const monDisetujui = monSorted.find(
-          m => m.status_verifikasi === 'disetujui'
+        res.render(
+          'petugas-lapangan/pohon/index',
+          {
+            title: 'Data Pohon',
+            activePage: 'penanaman',
+            data,
+            penanaman,
+            jenisPohon,
+            mitra,
+            user: req.user
+          }
         );
 
-        overallStatus = 'disetujui';
-        overallTahap  = monDisetujui
-          ? `Monitoring ${monDisetujui.monitoring?.tahap_monitoring}`
-          : 'Data Penanaman';
+      } catch (error) {
+
+        console.log(error);
+        res.send(error.message);
 
       }
 
-      return {
-        ...pohon.toJSON(),
-        overallStatus,
-        overallTahap
-      };
-
-    });
-
-    const jenisPohon =
-      await JenisPohon.findAll({
-        order: [['nama_pohon', 'ASC']]
-      });
-
-    const mitra =
-      await Mitra.findAll({
-        order: [['nama_mitra', 'ASC']]
-      });
-
-    res.render(
-      'petugas-lapangan/pohon/index',
-      {
-        title: 'Data Pohon',
-        data,
-        penanaman,
-        jenisPohon,
-        mitra,
-        user: req.user
-      }
-    );
-
-  } catch (error) {
-
-    console.log(error);
-    res.send(error.message);
-
-  }
-
-}
+    }
 
     // CREATE DATA POHON
     static async create(req, res) {
@@ -205,7 +196,6 @@ static async index(req, res) {
           longitude
         } = req.body;
 
-        // VALIDASI FOTO
         if (
           !req.files ||
           req.files.length === 0
@@ -217,7 +207,6 @@ static async index(req, res) {
 
         }
 
-        // AMBIL DATA PENANAMAN
         const penanaman =
           await Penanaman.findByPk(
             id_penanaman
@@ -243,15 +232,12 @@ static async index(req, res) {
             .replace(/\s+/g, '')
             .toUpperCase();
 
-        // kode 3 huruf jenis pohon
         const kodePohon =
           namaPohon.substring(0, 3);
 
-        // ambil id penanaman langsung sebagai prefix
         const prefix =
           `${id_penanaman}-${kodePohon}`;
 
-        // cari data terakhir
         const lastData =
           await Pohon.findOne({
 
@@ -287,9 +273,6 @@ static async index(req, res) {
             file => file.filename
           );
 
-        // ======================================
-        // SIMPAN DATA POHON
-        // ======================================
 
         const pohonBaru =
           await Pohon.create({
@@ -310,9 +293,6 @@ static async index(req, res) {
 
           });
 
-        // ======================================
-        // AUTO ASSIGN KE DONATUR CORPORATE
-        // ======================================
 
         const corporateDonasi =
           await Donasi.findAll({
@@ -340,10 +320,8 @@ static async index(req, res) {
 
           });
 
-        // LOOP DONASI CORPORATE
         for (const donasi of corporateDonasi) {
 
-          // HITUNG YANG SUDAH TERASSIGN
           const assigned =
             await DonasiPohon.count({
 
@@ -354,13 +332,11 @@ static async index(req, res) {
 
             });
 
-          // CEK MASIH ADA KUOTA?
           if (
             assigned <
             donasi.jumlah_pohon
           ) {
 
-            // ASSIGN POHON
             await DonasiPohon.create({
 
               id_donasi:
@@ -370,8 +346,6 @@ static async index(req, res) {
                 pohonBaru.id_pohon
 
             });
-
-            // STOP LOOP
             break;
 
           }
@@ -449,7 +423,6 @@ static async index(req, res) {
 
       }
 
-      // PARSE FOTO
       let fotoList = [];
 
       try {
@@ -481,6 +454,7 @@ static async index(req, res) {
         'petugas-lapangan/pohon/detail',
         {
           title: 'Detail Pohon',
+          activePage: 'penanaman',
           data,
           fotoList,
           jenisPohon,
@@ -621,7 +595,6 @@ static async index(req, res) {
       const qrValue =
         `${process.env.BASE_URL}/petugas-lapangan/pohon/detail/${data.id_pohon}`;
 
-      // Folder QR
       const qrFolder =
         path.join(
           __dirname,

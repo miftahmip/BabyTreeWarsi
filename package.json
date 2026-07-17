@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "concurrently \"nodemon app.js\"",
     "start": "node app.js",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
     "tailwind": "npx @tailwindcss/cli -i ./src/input.css -o ./public/css/output.css --watch"
   },
   "author": "",
