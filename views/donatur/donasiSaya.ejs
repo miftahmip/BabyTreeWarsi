@@ -1,229 +1,293 @@
 <% layout('layouts/donatur') %>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
-  .ds-wrap {
-    padding: 28px 8px 48px 0;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
+  * { box-sizing: border-box; }
+
+.ds-wrap {
+  padding: 8px 32px 56px 0;
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+}
 
   /* ── Page header ── */
   .ds-page-header {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
 
   .ds-page-header h2 {
     font-family: 'Playfair Display', serif;
-    font-size: 1.75rem;
+    font-size: 1.7rem;
     font-weight: 700;
     color: #1a4731;
-    margin: 0 0 5px;
+    margin: 0 0 4px;
     line-height: 1.2;
   }
 
   .ds-page-header p {
-    font-family: 'DM Sans', sans-serif;
-    font-size: .875rem;
-    color: #7c9585;
+    font-size: .84rem;
+    color: #8a9c92;
     margin: 0;
-    font-weight: 300;
+    font-weight: 400;
   }
 
-  /* ── Grid ── */
-  .ds-grid {
+  /* ── Stat cards (3 card terpisah) ── */
+  .ds-stat-strip {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    gap: 16px;
+    margin-bottom: 36px;
   }
 
-  @media (max-width: 960px) {
-    .ds-grid { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 700px) {
+    .ds-stat-strip { grid-template-columns: 1fr; }
   }
 
-  @media (max-width: 580px) {
-    .ds-grid { grid-template-columns: 1fr; gap: 14px; }
-    .ds-page-header h2 { font-size: 1.4rem; }
-    .ds-wrap { padding: 20px 14px 40px; }
-  }
-
-  /* ── Card ── */
-  .ds-card {
-    background: #ffffff;
-    border-radius: 18px;
-    border: 1px solid rgba(116,198,157,.18);
-    overflow: hidden;
+  .ds-stat-item {
+    background: #fff;
+    border: 1px solid rgba(26,71,49,.08);
+    border-radius: 14px;
+    padding: 20px 22px;
     display: flex;
-    flex-direction: column;
-    transition: transform .22s cubic-bezier(.22,1,.36,1),
-                box-shadow .22s cubic-bezier(.22,1,.36,1);
-    box-shadow: 0 2px 12px rgba(26,71,49,.06);
-    position: relative;
-  }
-
-  .ds-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 36px rgba(26,71,49,.13);
-  }
-
-  /* Accent stripe top */
-  .ds-card::before {
-    content: '';
-    display: block;
-    height: 4px;
-    background: linear-gradient(90deg, #40916c, #74c69d);
-    width: 100%;
-  }
-
-  /* ── Card body ── */
-  .ds-card-body {
-    padding: 20px 20px 16px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Program icon badge */
-  .ds-icon-wrap {
-    width: 42px; height: 42px;
-    border-radius: 12px;
-    background: rgba(216,243,220,.5);
-    border: 1px solid rgba(116,198,157,.25);
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 14px;
-    flex-shrink: 0;
-  }
-
-  .ds-program-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a4731;
-    line-height: 1.35;
-    margin: 0 0 14px;
-    flex: 1;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Pohon badge */
-  .ds-pohon-badge {
-    display: inline-flex;
     align-items: center;
-    gap: 7px;
-    background: rgba(216,243,220,.45);
-    border: 1px solid rgba(116,198,157,.25);
-    border-radius: 30px;
-    padding: 6px 13px 6px 8px;
-    margin-bottom: 18px;
-    width: fit-content;
+    gap: 14px;
+    transition: transform .18s, box-shadow .18s;
   }
 
-  .ds-pohon-badge-dot {
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #52b788, #2d6a4f);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+  .ds-stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(26,71,49,.08);
   }
 
-  .ds-pohon-count {
-    font-family: 'DM Sans', sans-serif;
-    font-size: .82rem;
-    color: #1a4731;
-    font-weight: 600;
-  }
-
-  .ds-pohon-count span {
-    font-weight: 700;
-    font-size: .92rem;
-  }
-
-  /* ── Card footer ── */
-  .ds-card-footer {
-    padding: 12px 20px 18px;
-  }
-
-  .ds-btn {
+  .ds-stat-icon-box {
+    width: 42px; height: 42px;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    width: 100%;
-    padding: 11px 16px;
-    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  .ds-stat-icon-box.green {
+    background: linear-gradient(135deg, #52b788, #1a4731);
+  }
+
+  .ds-stat-icon-box.brown {
+    background: linear-gradient(135deg, #c9a87c, #7d5a3c);
+  }
+
+  .ds-stat-icon-box.amber {
+    background: linear-gradient(135deg, #ffca28, #f57f17);
+  }
+
+  .ds-stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a4731;
+    line-height: 1.1;
+  }
+
+  .ds-stat-label {
+    font-size: .74rem;
+    color: #8a9c92;
+    font-weight: 500;
+    margin-top: 1px;
+  }
+
+  @media (max-width: 700px) {
+    .ds-stat-strip { flex-direction: column; }
+    .ds-stat-item + .ds-stat-item::before { display: none; }
+    .ds-stat-item + .ds-stat-item { border-top: 1px solid rgba(26,71,49,.08); }
+  }
+
+  /* ── Section ── */
+  .ds-section {
+    margin-bottom: 36px;
+  }
+
+  .ds-section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 0 4px;
+  }
+
+  .ds-section-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a4731;
+    margin: 0;
+  }
+
+  .ds-section-sub {
+    font-size: .78rem;
+    color: #a3b8ab;
+    font-weight: 400;
+  }
+
+  /* ── Panel: satu wadah putih untuk semua row ── */
+  .ds-panel {
+    background: #fff;
+    border: 1px solid rgba(26,71,49,.08);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  /* ── Row ── */
+  .ds-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(26,71,49,.06);
+    transition: background .15s;
+  }
+
+  .ds-row:last-child { border-bottom: none; }
+  .ds-row:hover { background: rgba(216,243,220,.18); }
+
+  .ds-row-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #52b788, #1a4731);
+  }
+
+  .ds-row-icon.pending { background: #fff3d6; }
+  .ds-row-icon.danger  { background: #fdecea; }
+  .ds-row-icon.closed  { background: #f0f0f0; }
+
+  .ds-row-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ds-row-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .92rem;
+    font-weight: 600;
+    color: #1a4731;
+    margin: 0 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ds-row-meta {
+    font-size: .78rem;
+    color: #8a9c92;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .ds-row-meta strong {
+    color: #2d6a4f;
+    font-weight: 700;
+  }
+
+  .ds-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .68rem;
+    font-weight: 600;
+  }
+
+  .ds-badge-pending { background: #fff3d6; color: #b5651d; }
+  .ds-badge-danger  { background: #fdecea; color: #c62828; }
+  .ds-badge-closed  { background: #eee;    color: #757575; }
+
+  /* ── Action button di kanan row ── */
+  .ds-row-action {
+    flex-shrink: 0;
+  }
+
+  .ds-row-action form { margin: 0; }
+
+  .ds-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
-    background: linear-gradient(135deg, #40916c, #1a4731);
+    background: #1a4731;
     color: #fff;
     font-family: 'DM Sans', sans-serif;
-    font-size: .86rem;
+    font-size: .8rem;
     font-weight: 600;
     text-decoration: none;
-    letter-spacing: .2px;
-    transition: opacity .18s, transform .18s;
-    box-shadow: 0 4px 14px rgba(45,106,79,.28);
+    white-space: nowrap;
+    transition: opacity .15s, transform .15s;
   }
 
   .ds-btn:hover {
-    opacity: .92;
-    transform: translateY(-1px);
+    opacity: .88;
     color: #fff;
     text-decoration: none;
+  }
+
+  .ds-btn-pending { background: #f57f17; }
+  .ds-btn-retry   { background: #c62828; }
+
+  .ds-closed-text {
+    font-size: .76rem;
+    color: #9aa5a0;
+    font-style: italic;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 620px) {
+    .ds-row {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .ds-row-info { width: 100%; order: 1; }
+    .ds-row-icon { order: 0; }
+    .ds-row-action { order: 2; width: 100%; }
+    .ds-row-action .ds-btn { width: 100%; }
+    .ds-closed-text { width: 100%; text-align: left; }
   }
 
   /* ── Empty state ── */
   .ds-empty {
-    grid-column: 1 / -1;
     text-align: center;
-    padding: 64px 24px;
-    background: #fff;
-    border: 1px dashed rgba(116,198,157,.35);
-    border-radius: 18px;
+    padding: 48px 24px;
   }
 
   .ds-empty-icon {
-    width: 60px; height: 60px;
+    width: 52px; height: 52px;
     border-radius: 50%;
     background: rgba(216,243,220,.4);
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px;
+    margin: 0 auto 14px;
   }
 
   .ds-empty h4 {
     font-family: 'Playfair Display', serif;
     color: #1a4731;
-    font-size: 1.1rem;
-    margin: 0 0 6px;
+    font-size: 1rem;
+    margin: 0 0 5px;
   }
 
   .ds-empty p {
-    font-family: 'DM Sans', sans-serif;
-    font-size: .875rem;
-    color: #7c9585;
-    margin: 0;
+    font-size: .84rem;
+    color: #8a9c92;
+    margin: 0 0 16px;
   }
 
-  /* Card entry animation */
-  .ds-card {
-    animation: cardIn .4s cubic-bezier(.22,1,.36,1) both;
+  .ds-empty .ds-btn {
+    display: inline-flex;
   }
-
-  @keyframes cardIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-    .ds-card:nth-child(1) { animation-delay: 0s; }
-    .ds-card:nth-child(2) { animation-delay: .07s; }
-    .ds-card:nth-child(3) { animation-delay: .14s; }
-    .ds-card:nth-child(4) { animation-delay: .21s; }
-    .ds-card:nth-child(5) { animation-delay: .28s; }
-    .ds-card:nth-child(6) { animation-delay: .35s; }
 </style>
 
 
@@ -235,70 +299,220 @@
     <p>Program donasi yang sedang atau telah kamu ikuti</p>
   </div>
 
-  <!-- Grid -->
-  <div class="ds-grid">
+  <!-- Stat strip -->
+  <div class="ds-stat-strip">
 
-    <% if (!data || data.length === 0) { %>
-    <div class="ds-empty">
-      <div class="ds-empty-icon">
-        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#40916c" stroke-width="1.5">
-          <path d="M12 22V12" stroke-linecap="round"/>
-          <path d="M12 12C12 12 8 9 8 5C8 2.5 10 1 12 1C14 1 16 2.5 16 5C16 9 12 12 12 12Z"/>
-        </svg>
-      </div>
-      <h4>Belum Ada Donasi</h4>
-      <p>Kamu belum memiliki program donasi aktif saat ini</p>
-    </div>
-    <% } %>
-
-    <% if (data && data.length > 0) { %>
-      <% data.forEach(item => { %>
-      <div class="ds-card">
-        <div class="ds-card-body">
-
-
-          <!-- Judul -->
-          <h3 class="ds-program-title">
-            <%= item.program.judul_program %>
-          </h3>
-
-          <!-- Jumlah pohon -->
-          <div class="ds-pohon-badge">
-            <div class="ds-pohon-badge-dot">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.8">
-          <!-- Lapisan atas (puncak cemara) -->
+    <div class="ds-stat-item">
+      <div class="ds-stat-icon-box green">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.8">
           <polygon points="12,2 7,9 17,9" stroke-linejoin="round"></polygon>
-          <!-- Lapisan tengah (badan cemara) -->
           <polygon points="12,6 5.5,14 18.5,14" stroke-linejoin="round"></polygon>
-          <!-- Lapisan bawah (rok cemara) -->
           <polygon points="12,10 4,20 20,20" stroke-linejoin="round"></polygon>
-          <!-- Batang -->
           <line x1="12" y1="20" x2="12" y2="22" stroke-linecap="round"></line>
         </svg>
+      </div>
+      <div>
+        <div class="ds-stat-value">
+          <%= programDidukung.reduce((sum, p) => sum + p.total_pohon, 0) %>
+        </div>
+        <div class="ds-stat-label">Total Pohon Didonasikan</div>
+      </div>
+    </div>
+
+    <div class="ds-stat-item">
+      <div class="ds-stat-icon-box brown">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="ds-stat-value"><%= programDidukung.length %></div>
+        <div class="ds-stat-label">Program Didukung</div>
+      </div>
+    </div>
+
+    <div class="ds-stat-item">
+      <div class="ds-stat-icon-box amber">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4l3 3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="ds-stat-value"><%= transaksiPerluTindakan.length %></div>
+        <div class="ds-stat-label">Perlu Tindakan</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================== -->
+  <!-- SECTION 1: Program yang Didukung -->
+  <!-- ============================== -->
+  <div class="ds-section">
+
+    <div class="ds-section-header">
+      <h3>Program yang Didukung</h3>
+    </div>
+
+    <div class="ds-panel">
+
+      <% if (!programDidukung || programDidukung.length === 0) { %>
+        <div class="ds-empty">
+          <div class="ds-empty-icon">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#40916c" stroke-width="1.6">
+              <path d="M12 22V12" stroke-linecap="round"/>
+              <path d="M12 12C12 12 8 9 8 5C8 2.5 10 1 12 1C14 1 16 2.5 16 5C16 9 12 12 12 12Z"/>
+            </svg>
+          </div>
+          <h4>Belum Ada Donasi Berhasil</h4>
+          <p>Donasi yang sudah lunas akan muncul di sini beserta perkembangan pohonnya</p>
+          <a href="/" class="ds-btn">Mulai Donasi</a>
+        </div>
+      <% } %>
+
+      <% if (programDidukung && programDidukung.length > 0) { %>
+        <% programDidukung.forEach(item => { %>
+        <div class="ds-row">
+
+          <div class="ds-row-icon">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.7">
+              <polygon points="12,2 7,9 17,9" stroke-linejoin="round"></polygon>
+              <polygon points="12,6 5.5,14 18.5,14" stroke-linejoin="round"></polygon>
+              <polygon points="12,10 4,20 20,20" stroke-linejoin="round"></polygon>
+              <line x1="12" y1="20" x2="12" y2="22" stroke-linecap="round"></line>
+            </svg>
+          </div>
+
+          <div class="ds-row-info">
+            <div class="ds-row-title"><%= item.program.judul_program %></div>
+            <div class="ds-row-meta">
+              <strong><%= item.total_pohon %> pohon</strong> didonasikan
             </div>
-            <span class="ds-pohon-count">
-              <span><%= item.dataValues.total_pohon %></span> Pohon Didonasikan
-            </span>
+          </div>
+
+          <div class="ds-row-action">
+            <a href="/donatur/dashboard-program/<%= item.program.id_program %>" class="ds-btn">
+              Lihat Perkembangan
+            </a>
           </div>
 
         </div>
+        <% }) %>
+      <% } %>
 
-        <!-- Button -->
-        <div class="ds-card-footer">
-          <a href="/donatur/dashboard-program/<%= item.program.id_program %>"
-             class="ds-btn">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-              <rect x="3" y="3" width="7" height="7" rx="1"/>
-              <rect x="14" y="3" width="7" height="7" rx="1"/>
-              <rect x="3" y="14" width="7" height="7" rx="1"/>
-              <rect x="14" y="14" width="7" height="7" rx="1"/>
-            </svg>
-            Lihat Dashboard
-          </a>
-        </div>
-      </div>
-      <% }) %>
-    <% } %>
-
+    </div>
   </div>
+
+  <!-- ============================== -->
+  <!-- SECTION 2: Perlu Tindakan -->
+  <!-- ============================== -->
+  <% if (transaksiPerluTindakan && transaksiPerluTindakan.length > 0) { %>
+  <div class="ds-section">
+
+    <div class="ds-section-header">
+      <h3>Perlu Tindakan</h3>
+      <span class="ds-section-sub">Selesaikan pembayaran agar donasimu diproses</span>
+    </div>
+
+    <div class="ds-panel">
+
+      <% transaksiPerluTindakan.forEach(item => { %>
+
+        <%
+          let statusLabel = 'Menunggu Pembayaran';
+          let badgeCls = 'ds-badge-pending';
+          let iconCls = 'pending';
+          let kind = 'pending';
+
+          if (item.statusDonasi === 'program_berakhir') {
+            statusLabel = 'Program Berakhir';
+            badgeCls = 'ds-badge-closed';
+            iconCls = 'closed';
+            kind = 'closed';
+          } else if (item.statusDonasi === 'expired') {
+            statusLabel = 'Kadaluarsa';
+            badgeCls = 'ds-badge-danger';
+            iconCls = 'danger';
+            kind = 'danger';
+          } else if (item.statusDonasi === 'failed') {
+            statusLabel = 'Gagal';
+            badgeCls = 'ds-badge-danger';
+            iconCls = 'danger';
+            kind = 'danger';
+          } else if (item.statusDonasi === 'cancelled') {
+            statusLabel = 'Dibatalkan';
+            badgeCls = 'ds-badge-danger';
+            iconCls = 'danger';
+            kind = 'danger';
+          }
+        %>
+
+        <div class="ds-row">
+
+          <div class="ds-row-icon <%= iconCls %>">
+            <% if (kind === 'closed') { %>
+              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#757575" stroke-width="2">
+                <rect x="4" y="10" width="16" height="10" rx="1.5"/>
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke-linecap="round"/>
+              </svg>
+            <% } else if (kind === 'danger') { %>
+              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#c62828" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M15 9l-6 6M9 9l6 6" stroke-linecap="round"/>
+              </svg>
+            <% } else { %>
+              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#f57f17" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4l3 3" stroke-linecap="round"/>
+              </svg>
+            <% } %>
+          </div>
+
+          <div class="ds-row-info">
+            <div class="ds-row-title"><%= item.program.judul_program %></div>
+            <div class="ds-row-meta">
+              <span class="ds-badge <%= badgeCls %>"><%= statusLabel %></span>
+              <span><strong><%= item.jumlah_pohon %> pohon</strong> · Rp <%= Number(item.nominal_donasi).toLocaleString('id-ID') %></span>
+            </div>
+          </div>
+
+          <div class="ds-row-action">
+
+            <% if (item.statusDonasi === 'program_berakhir') { %>
+
+              <span class="ds-closed-text">Tidak dapat diproses</span>
+
+            <% } else if (item.statusDonasi === 'pending' && item.sudahPilihMetode) { %>
+
+              <span class="ds-closed-text">Menunggu pembayaran masuk</span>
+
+            <% } else if (item.statusDonasi === 'pending') { %>
+
+              <a href="/payment/<%= item.activeOrderId %>" class="ds-btn ds-btn-pending">
+                Lanjutkan ke Halaman Pembayaran
+              </a>
+
+            <% } else { %>
+
+              <form action="/donasi/<%= item.id_donasi %>/retry-payment" method="POST">
+                <button type="submit" class="ds-btn ds-btn-retry">
+                  Bayar Ulang
+                </button>
+              </form>
+
+            <% } %>
+
+          </div>
+
+        </div>
+      <% }) %>
+
+    </div>
+  </div>
+  <% } %>
+
 </div>

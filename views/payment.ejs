@@ -286,12 +286,22 @@
             </div>
             <div class="info-row-val">
               <%
-                const statusCls = payment.status === 'pending' ? 'status-pending'
-                                : payment.status === 'success' ? 'status-success'
-                                : 'status-failed';
-                const statusLabel = payment.status === 'pending' ? 'Menunggu Pembayaran'
-                                  : payment.status === 'success' ? 'Berhasil'
-                                  : 'Gagal';
+                let statusCls = 'status-pending';
+                let statusLabel = 'Menunggu Pembayaran';
+
+                if (payment.status === 'settlement') {
+                  statusCls = 'status-success';
+                  statusLabel = 'Berhasil';
+                } else if (payment.status === 'expired') {
+                  statusCls = 'status-failed';
+                  statusLabel = 'Kadaluarsa';
+                } else if (payment.status === 'failed') {
+                  statusCls = 'status-failed';
+                  statusLabel = 'Gagal';
+                } else if (payment.status === 'cancelled') {
+                  statusCls = 'status-failed';
+                  statusLabel = 'Dibatalkan';
+                }
               %>
               <span class="status-badge <%= statusCls %>"><%= statusLabel %></span>
             </div>

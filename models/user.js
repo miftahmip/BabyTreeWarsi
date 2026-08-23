@@ -68,6 +68,11 @@ module.exports = (sequelize, DataTypes) => {
       as: 'verifikasiMonitoring'
     });
 
+    User.hasMany(models.PengaturanPenandatangan, {
+      foreignKey: 'id_user',
+      as: 'riwayatPenandatangan'
+    });
+
   };
 
   return User;

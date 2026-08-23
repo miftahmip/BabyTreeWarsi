@@ -60,6 +60,7 @@ const adminPusatDashboardRoutes = require('./routes/adminPusatDashboardRoutes');
 const pimpinanDashboardRoutes = require('./routes/pimpinanDashboardRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const forgotPasswordRoutes = require('./routes/forgotPasswordRoutes');
+const sertifikatRoutes = require('./routes/sertifikatRoutes');
 
 // public (landing page)
 app.use('/', landingRoutes);
@@ -87,7 +88,7 @@ app.use('/', adminPusatDashboardRoutes);
 app.use('/', pimpinanDashboardRoutes);
 app.use('/', profileRoutes);
 app.use('/', forgotPasswordRoutes);
-
+app.use('/', sertifikatRoutes);
 
 // ================= ERROR HANDLER =================
 

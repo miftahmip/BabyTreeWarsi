@@ -1,66 +1,168 @@
 const PDFDocument = require('pdfkit');
-const {Donasi, DonasiPohon, Pohon, ProgramDonasi, DetailMonitoring, Monitoring, Penanaman} = require('../models');
+const {Donasi, DonasiPohon, Pohon, ProgramDonasi, Payment, DetailMonitoring, Monitoring, Penanaman} = require('../models');
 const WilayahService = require('../services/wilayahService');
 
 class CorporateController {
 
-  static async donasiSaya(req, res) {
+    static async donasiSaya(req, res) {
 
-    try {
+      try {
 
-      const data =
-        await Donasi.findAll({
+        const donasiList =
+          await Donasi.findAll({
 
-          where: {
-            id_user: req.user.id_user
-          },
+            where: {
+              id_user: req.user.id_user
+            },
 
-          include: [
-            {
-              model: ProgramDonasi,
-              as: 'program'
-            }
-          ],
+            include: [
 
-          order: [['createdAt', 'DESC']]
-        });
+              {
+                model: ProgramDonasi,
+                as: 'program'
+              },
 
-      const result =
-        await Promise.all(
+              {
+                model: Payment,
+                as: 'payments'
+              }
 
-          data.map(async (item) => {
+            ],
 
-            const json =
-              item.toJSON();
+            order: [
+              ['createdAt', 'DESC']
+            ]
 
-            json.program =
-              await WilayahService.mapWilayah(
-                json.program
-              );
+          });
 
-            return json;
+        // ==========================
+        // Tentukan status efektif tiap Donasi
+        // + mapping wilayah untuk tiap program
+        // ==========================
 
-          })
+        const donasiWithStatus =
+          await Promise.all(
 
+            donasiList.map(async (donasi) => {
+
+              const json =
+                donasi.toJSON();
+
+              json.program =
+                await WilayahService.mapWilayah(
+                  json.program
+                );
+
+              const payments =
+                donasi.payments || [];
+
+              const settledPayment =
+                payments.find(
+                  (p) => p.status === 'settlement'
+                );
+
+              if (settledPayment) {
+
+                return {
+                  ...json,
+                  statusDonasi: 'settlement',
+                  activeOrderId: settledPayment.order_id,
+                  sudahPilihMetode: false
+                };
+
+              }
+
+              // ==========================
+              // Program sudah berakhir -- tidak bisa retry
+              // ==========================
+
+              if (
+                donasi.program &&
+                donasi.program.status_program === 'selesai'
+              ) {
+
+                return {
+                  ...json,
+                  statusDonasi: 'program_berakhir',
+                  activeOrderId: null,
+                  sudahPilihMetode: false
+                };
+
+              }
+
+              const latestPayment =
+                payments.sort(
+                  (a, b) =>
+                    new Date(b.created_at) -
+                    new Date(a.created_at)
+                )[0];
+
+              return {
+
+                ...json,
+
+                statusDonasi:
+                  latestPayment
+                    ? latestPayment.status
+                    : 'pending',
+
+                activeOrderId:
+                  latestPayment
+                    ? latestPayment.order_id
+                    : null,
+
+                // ==========================
+                // payment_channel terisi untuk SEMUA metode
+                // (VA, QRIS, GoPay, cstore, dll)
+                // ==========================
+
+                sudahPilihMetode:
+                  !!(
+                    latestPayment &&
+                    latestPayment.payment_channel
+                  )
+
+              };
+
+            })
+
+          );
+
+        // ==========================
+        // Split jadi 2 kelompok
+        // (tidak perlu grouping per program,
+        // karena dashboard corporate memang per-transaksi)
+        // ==========================
+
+        const donasiBerhasil =
+          donasiWithStatus.filter(
+            (d) => d.statusDonasi === 'settlement'
+          );
+
+        const donasiPerluTindakan =
+          donasiWithStatus.filter(
+            (d) => d.statusDonasi !== 'settlement'
+          );
+
+        res.render(
+          'corporate/donasi-saya',
+          {
+            title: 'Donasi Saya',
+            activePage: 'donasi-saya',
+            donasiBerhasil,
+            donasiPerluTindakan,
+            user: req.user
+          }
         );
 
-      res.render(
-        'corporate/donasi-saya',
-        {
-          title: 'Donasi Saya',
-          data: result,
-          user: req.user
-        }
-      );
+      } catch (error) {
 
-    } catch (error) {
+        console.log(error);
+        res.send(error.message);
 
-      console.log(error);
-      res.send(error.message);
+      }
 
     }
-
-  }
 
 
     static async dashboardProgram(req, res) {

@@ -1257,7 +1257,9 @@
   document.getElementById('searchInput').addEventListener('keyup', applyFilters);
 
   /* ════ VALIDASI FORM ════ */
-  document.getElementById('createForm').addEventListener('submit', function(e) {
+ document.getElementById('createForm').addEventListener('submit', async function(e) {
+    e.preventDefault(); // selalu cegah submit browser biasa
+
     const today   = new Date().toISOString().split('T')[0];
     const judul   = this.judul_program.value.trim();
     const harga   = this.harga_pohon.value;
@@ -1265,20 +1267,49 @@
     const selesai = this.tanggal_selesai.value;
     const msg     = document.getElementById('createValidasi');
 
+    // Validasi client-side yang sudah ada, tetap jalan duluan
     if (!judul || !harga || !mulai || !selesai) {
-      e.preventDefault(); msg.style.display = 'block';
-      msg.textContent = 'Silahkan lengkapi semua data yang wajib diisi'; return;
+        msg.style.display = 'block';
+        msg.textContent = 'Silahkan lengkapi semua data yang wajib diisi'; return;
     }
     if (selesai < today) {
-      e.preventDefault(); msg.style.display = 'block';
-      msg.textContent = 'Tanggal selesai tidak boleh sebelum hari ini'; return;
+        msg.style.display = 'block';
+        msg.textContent = 'Tanggal selesai tidak boleh sebelum hari ini'; return;
     }
     if (selesai < mulai) {
-      e.preventDefault(); msg.style.display = 'block';
-      msg.textContent = 'Tanggal selesai tidak boleh sebelum tanggal mulai'; return;
+        msg.style.display = 'block';
+        msg.textContent = 'Tanggal selesai tidak boleh sebelum tanggal mulai'; return;
     }
     msg.style.display = 'none';
-  });
+
+    // Kirim ke server via fetch (FormData otomatis handle file upload juga)
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('.mform-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Menyimpan...';
+
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            window.location.reload(); // sukses → reload untuk lihat data baru di tabel
+        } else {
+            // Gagal (misal duplikat) → modal tetap terbuka, tampilkan pesan
+            msg.style.display = 'block';
+            msg.textContent = result.message || 'Terjadi kesalahan';
+        }
+    } catch (err) {
+        msg.style.display = 'block';
+        msg.textContent = 'Gagal terhubung ke server';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Simpan Program';
+    }
+});
 
   document.getElementById('editForm').addEventListener('submit', function(e) {
     const today   = new Date().toISOString().split('T')[0];

@@ -7,61 +7,168 @@ class DonaturController {
 
     try {
 
-        const data =
+      const donasiList =
         await Donasi.findAll({
 
-            where: {
+          where: {
             id_user: req.user.id_user
-            },
+          },
 
-            attributes: [
-
-            'id_program',
-
-            [
-                fn(
-                'SUM',
-                col('jumlah_pohon')
-                ),
-                'total_pohon'
-            ]
-
-            ],
-
-            include: [
+          include: [
 
             {
-                model: ProgramDonasi,
-                as: 'program'
+              model: ProgramDonasi,
+              as: 'program'
             },
 
             {
-                model: Payment,
-                as: 'payments',
-
-                attributes: [],
-
-                where: {
-                status: 'settlement'
-                }
+              model: Payment,
+              as: 'payments'
             }
 
-            ],
+          ],
 
-            group: [
-            'id_program',
-            'program.id_program'
-            ],
-
-            order: [['createdAt', 'DESC']]
+          order: [
+            ['createdAt', 'DESC']
+          ]
 
         });
+
+      // ==========================
+      // Tentukan status efektif tiap Donasi
+      // ==========================
+
+      const donasiWithStatus =
+        donasiList.map((donasi) => {
+
+          const payments =
+            donasi.payments || [];
+
+          const settledPayment =
+            payments.find(
+              (p) => p.status === 'settlement'
+            );
+
+          if (settledPayment) {
+
+            return {
+              ...donasi.toJSON(),
+              statusDonasi: 'settlement',
+              activeOrderId: settledPayment.order_id,
+              sudahPilihMetode: false
+            };
+
+          }
+
+          // ==========================
+          // Program sudah berakhir -- tidak bisa retry
+          // ==========================
+
+          if (
+            donasi.program &&
+            donasi.program.status_program === 'selesai'
+          ) {
+
+            return {
+              ...donasi.toJSON(),
+              statusDonasi: 'program_berakhir',
+              activeOrderId: null,
+              sudahPilihMetode: false
+            };
+
+          }
+
+          const latestPayment =
+            payments.sort(
+              (a, b) =>
+                new Date(b.created_at) -
+                new Date(a.created_at)
+            )[0];
+
+          return {
+
+            ...donasi.toJSON(),
+
+            statusDonasi:
+              latestPayment
+                ? latestPayment.status
+                : 'pending',
+
+            activeOrderId:
+              latestPayment
+                ? latestPayment.order_id
+                : null,
+
+            // ==========================
+            // Sudah pilih metode pembayaran
+            // ==========================
+
+            sudahPilihMetode:
+              !!(
+                latestPayment &&
+                latestPayment.payment_channel
+              )
+
+          };
+
+        });
+
+      // ==========================
+      // Group 1: Program yang sudah didukung
+      // ==========================
+
+      const programMap =
+        new Map();
+
+      donasiWithStatus
+
+        .filter(
+          (d) => d.statusDonasi === 'settlement'
+        )
+
+        .forEach((d) => {
+
+          const key =
+            d.program.id_program;
+
+          if (!programMap.has(key)) {
+
+            programMap.set(key, {
+
+              program: d.program,
+
+              total_pohon: 0
+
+            });
+
+          }
+
+          programMap.get(key).total_pohon +=
+            d.jumlah_pohon;
+
+        });
+
+      const programDidukung =
+        Array.from(
+          programMap.values()
+        );
+
+      // ==========================
+      // Group 2: Transaksi yang perlu tindakan
+      // ==========================
+
+      const transaksiPerluTindakan =
+        donasiWithStatus.filter(
+          (d) => d.statusDonasi !== 'settlement'
+        );
 
       res.render(
         'donatur/donasiSaya',
         {
           title: 'Donasi Saya',
-          data,
+          activePage: 'donasi-saya',
+          programDidukung,
+          transaksiPerluTindakan,
           user: req.user
         }
       );
@@ -154,6 +261,7 @@ class DonaturController {
 
         res.render('donatur/dashboardProgram', {
           title: 'Dashboard Program',
+          activePage: 'donasi-saya',
           program,
           totalPohon,
           totalHidup,

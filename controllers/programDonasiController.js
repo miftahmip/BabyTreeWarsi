@@ -93,60 +93,61 @@ class ProgramDonasiController {
         }
     }
 
-    static async store(req, res) {
-        try {
+static async store(req, res) {
+    try {
+        const {
+            judul_program,
+            deskripsi,
+            harga_pohon,
+            tanggal_selesai,
+            kode_provinsi,
+            kode_kbp_kota,
+            kode_kecamatan,
+            kode_kelurahan
+        } = req.body;
 
-            const {
-                judul_program,
-                deskripsi,
-                harga_pohon,
-                tanggal_selesai,
-                kode_provinsi,
-                kode_kbp_kota,
-                kode_kecamatan,
-                kode_kelurahan
-            } = req.body;
+        const judulBersih = judul_program.trim();
 
-            const total = await ProgramDonasi.count();
+        const existingProgram = await ProgramDonasi.findOne({
+            where: { judul_program: judulBersih }
+        });
 
-            const id_program =
-                'PRG' + String(total + 1).padStart(4, '0');
-
-            const flyer_program =
-                req.file ? req.file.filename : null;
-
-            const today = new Date().toISOString().split('T')[0];
-
-            await ProgramDonasi.create({
-                id_program,
-                created_by_user_id: req.user.id_user,
-
-                judul_program,
-                flyer_program,
-                deskripsi,
-
-                pohon_terkumpul: 0,
-                harga_pohon,
-
-                tanggal_mulai: today,
-                tanggal_selesai: tanggal_selesai || null,
-
-                // 🔥 tetap simpan (opsional, tapi tidak dipakai utama)
-                status_program: 'aktif',
-
-                kode_provinsi,
-                kode_kbp_kota,
-                kode_kecamatan,
-                kode_kelurahan
+        if (existingProgram) {
+            return res.status(409).json({
+                success: false,
+                message: 'Program dengan judul tersebut sudah ada'
             });
-
-            return res.redirect('/admin-pusat/kelola-program');
-
-        } catch (error) {
-            console.error(error);
-            return res.status(500).send('Gagal menyimpan data');
         }
+
+        const total = await ProgramDonasi.count();
+        const id_program = 'PRG' + String(total + 1).padStart(4, '0');
+        const flyer_program = req.file ? req.file.filename : null;
+        const today = new Date().toISOString().split('T')[0];
+
+        await ProgramDonasi.create({
+            id_program,
+            created_by_user_id: req.user.id_user,
+            judul_program: judulBersih,
+            flyer_program,
+            deskripsi,
+            pohon_terkumpul: 0,
+            harga_pohon,
+            tanggal_mulai: today,
+            tanggal_selesai: tanggal_selesai || null,
+            status_program: 'aktif',
+            kode_provinsi,
+            kode_kbp_kota,
+            kode_kecamatan,
+            kode_kelurahan
+        });
+
+        return res.status(200).json({ success: true });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: 'Gagal menyimpan data' });
     }
+}
 
     static async update(req, res) {
         try {
